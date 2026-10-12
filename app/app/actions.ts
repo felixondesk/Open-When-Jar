@@ -251,6 +251,8 @@ export async function invitePlanMemberAction(
   if (!claimsData?.claims?.sub) redirect("/auth");
   const { error } = await supabase.rpc("invite_plan_member", { p_email: email });
   if (error) return { error: friendlyInviteError(error.message) };
+  const { data: deliveryAllowed, error: deliveryError } = await supabase.rpc("claim_invitation_delivery", { p_email: email });
+  if (deliveryError || !deliveryAllowed) return { error: "Seat reserved. Please wait before sending another invitation email (one per minute, ten per hour)." };
   revalidatePath("/app");
   const emailSent = await deliverSeatInvitation(email, emailConfig);
   if (!emailSent) {
@@ -278,6 +280,10 @@ export async function resendPlanInvitationAction(formData: FormData) {
   const { error } = await supabase.rpc("invite_plan_member", { p_email: email });
   if (error) redirect(`/app?view=circle&inviteError=${encodeURIComponent(friendlyInviteError(error.message))}`);
 
+  const { data: deliveryAllowed, error: deliveryError } = await supabase.rpc("claim_invitation_delivery", { p_email: email });
+  if (deliveryError || !deliveryAllowed) {
+    redirect(`/app?view=circle&inviteError=${encodeURIComponent("Please wait before sending another invitation email (one per minute, ten per hour).")}`);
+  }
   const emailSent = await deliverSeatInvitation(email, emailConfig);
   if (!emailSent) {
     redirect(`/app?view=circle&inviteError=${encodeURIComponent("The seat is still reserved, but the email could not be resent. Check the recipient restriction and try again.")}`);

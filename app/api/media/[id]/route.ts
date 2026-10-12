@@ -27,6 +27,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
     "Content-Disposition": "inline",
     "Content-Type": attachment.mime_type,
     "X-Content-Type-Options": "nosniff",
+    "Content-Security-Policy": "default-src 'none'; sandbox; frame-ancestors 'none'",
   });
 
   if (!range) {

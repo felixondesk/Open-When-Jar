@@ -1,4 +1,5 @@
 import DodoPayments from "npm:dodopayments@2.51.0";
+import { readWebhookBody } from "./body.ts";
 import { withSupabase } from "npm:@supabase/server@^1";
 
 const webhookKey = Deno.env.get("DODO_PAYMENTS_TEST_WEBHOOK_KEY")?.trim();
@@ -20,8 +21,9 @@ export default {
     }
 
     let event;
+    const rawBody = await readWebhookBody(request);
+    if (rawBody === null) return jsonResponse({ error: "Request body is too large or invalid" }, 413);
     try {
-      const rawBody = await request.text();
       event = dodo.webhooks.unwrap(rawBody, {
         headers: {
           "webhook-id": webhookId,

@@ -1,13 +1,12 @@
 import { NextResponse } from "next/server";
-import { getAuthOrigin } from "@/lib/auth-origin";
+import { getAuthOrigin, getSafeAuthRedirect } from "@/lib/auth-origin";
 import { createClient } from "@/lib/supabase/server";
 
 export async function GET(request: Request) {
   const url = new URL(request.url);
   const origin = getAuthOrigin(request.headers);
   const code = url.searchParams.get("code");
-  const requestedNext = url.searchParams.get("next") ?? "/app";
-  const next = requestedNext.startsWith("/") && !requestedNext.startsWith("//") ? requestedNext : "/app";
+  const next = getSafeAuthRedirect(url.searchParams.get("next"), origin);
 
   if (code) {
     const supabase = await createClient();
@@ -25,7 +24,7 @@ export async function GET(request: Request) {
           return NextResponse.redirect(new URL("/auth/username", origin));
         }
       }
-      return NextResponse.redirect(new URL(next, origin));
+      return NextResponse.redirect(next);
     }
 
     // Keep provider/PKCE details out of the browser response. During local

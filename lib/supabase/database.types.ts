@@ -615,6 +615,10 @@ export type Database = {
         Args: { p_email: string }
         Returns: boolean
       }
+      claim_invitation_delivery: {
+        Args: { p_email: string }
+        Returns: boolean
+      }
       respond_circle_request: {
         Args: { p_accept: boolean; p_request_id: string }
         Returns: Database["public"]["Tables"]["circle_connections"]["Row"]
