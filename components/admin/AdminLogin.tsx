@@ -121,8 +121,8 @@ export function AdminLogin({ signedInAdmin = false }: { signedInAdmin?: boolean 
   async function verifyCode(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const normalizedToken = token.replace(/\s/g, "");
-    if (!/^\d{6}$/.test(normalizedToken)) {
-      setError("Enter the six-digit code from the email.");
+    if (!/^\d{6,10}$/.test(normalizedToken)) {
+      setError("Enter the complete verification code from the email (6–10 digits).");
       return;
     }
 
@@ -199,7 +199,7 @@ export function AdminLogin({ signedInAdmin = false }: { signedInAdmin?: boolean 
         <span className="paper-sprig" aria-hidden="true">❦</span>
         <p className="admin-login-card__eyebrow">Open When Jar · Admin</p>
         <h1>{mfaMode === "enroll" ? "Secure your account." : mfaMode === "challenge" || hasAdminSession ? "Two-step verification." : codeSent ? "Check your inbox." : "Admin sign in."}</h1>
-        <p>{mfaMode === "enroll" ? "Scan this QR code in your authenticator app, then enter its six-digit code." : mfaMode === "challenge" ? "Enter the current code from your authenticator app." : hasAdminSession ? "Finish two-step verification to open the portal." : codeSent ? `Enter the six-digit code sent to ${sentEmail}.` : "Use an email address that has administrator access."}</p>
+        <p>{mfaMode === "enroll" ? "Scan this QR code in your authenticator app, then enter its six-digit code." : mfaMode === "challenge" ? "Enter the current code from your authenticator app." : hasAdminSession ? "Finish two-step verification to open the portal." : codeSent ? `Enter the verification code sent to ${sentEmail}.` : "Use an email address that has administrator access."}</p>
 
         {checkingMfa ? <p role="status">Checking two-step verification…</p> : hasAdminSession && !mfaMode ? (
           <div className="admin-login-card__form">
@@ -247,10 +247,10 @@ export function AdminLogin({ signedInAdmin = false }: { signedInAdmin?: boolean 
               className="admin-otp-input"
               id="admin-otp"
               inputMode="numeric"
-              maxLength={6}
+              maxLength={10}
               onChange={(event) => setToken(event.target.value)}
-              pattern="[0-9]{6}"
-              placeholder="000000"
+              pattern="[0-9]{6,10}"
+              placeholder="Enter email code"
               required
               type="text"
               value={token}
