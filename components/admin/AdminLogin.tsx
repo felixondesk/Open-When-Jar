@@ -1,6 +1,7 @@
 "use client";
 
 import { type FormEvent, useEffect, useRef, useState } from "react";
+import { AuthCaptcha } from "@/components/AuthCaptcha";
 import { getAdminAccess } from "@/lib/admin";
 import { createClient } from "@/lib/supabase/client";
 
@@ -18,6 +19,8 @@ export function AdminLogin({ signedInAdmin = false }: { signedInAdmin?: boolean 
   const [mfaMode, setMfaMode] = useState<"" | "enroll" | "challenge">("");
   const [error, setError] = useState("");
   const [sending, setSending] = useState(false);
+  const [captchaToken, setCaptchaToken] = useState("");
+  const [captchaAttempt, setCaptchaAttempt] = useState<object>({});
   const [verifying, setVerifying] = useState(false);
   const [checkingMfa, setCheckingMfa] = useState(signedInAdmin);
   const mfaCheckStarted = useRef(false);
@@ -78,27 +81,41 @@ export function AdminLogin({ signedInAdmin = false }: { signedInAdmin?: boolean 
       setError("Enter a valid email address.");
       return;
     }
-
-    setError("");
-    setSending(true);
-    const supabase = createClient();
-    const { error: sendError } = await supabase.auth.signInWithOtp({
-      email: normalizedEmail,
-      options: { shouldCreateUser: false },
-    });
-    setSending(false);
-
-    if (sendError) {
-      const message = sendError.message.toLowerCase();
-      setError(message.includes("rate")
-        ? "A code was requested recently. Wait a minute, then try again."
-        : message.includes("fetch") || sendError.status === 0
-          ? "Couldn’t reach Supabase. Check your internet connection and project URL, then try again."
-          : "We couldn’t send a code. Confirm the account exists and that Supabase email delivery is configured.");
+    if (sending) return;
+    if (!captchaToken) {
+      setError("Complete the security check and try again.");
       return;
     }
 
-    setSentEmail(normalizedEmail);
+    setError("");
+    setSending(true);
+    try {
+      const supabase = createClient();
+      const { error: sendError } = await supabase.auth.signInWithOtp({
+        email: normalizedEmail,
+        options: { shouldCreateUser: false, captchaToken },
+      });
+
+      if (sendError) {
+        const message = sendError.message.toLowerCase();
+        setError(sendError.code === "captcha_failed" || message.includes("captcha")
+          ? "The security check failed or expired. Complete it again and try again."
+          : message.includes("rate")
+            ? "A code was requested recently. Wait a minute, then try again."
+            : message.includes("fetch") || sendError.status === 0
+              ? "Couldn’t reach Supabase. Check your internet connection and project URL, then try again."
+              : "We couldn’t send a code. Confirm the account exists and that Supabase email delivery is configured.");
+        return;
+      }
+
+      setSentEmail(normalizedEmail);
+    } catch {
+      setError("Couldn’t send a code. Check your connection and try again.");
+    } finally {
+      setSending(false);
+      setCaptchaToken("");
+      setCaptchaAttempt({});
+    }
   }
 
   async function verifyCode(event: FormEvent<HTMLFormElement>) {
@@ -259,7 +276,8 @@ export function AdminLogin({ signedInAdmin = false }: { signedInAdmin?: boolean 
               value={email}
             />
             {error ? <p className="field-error" role="alert">{error}</p> : null}
-            <button className="button button--primary" disabled={sending} type="submit">
+            <AuthCaptcha attempt={captchaAttempt} onToken={setCaptchaToken} />
+            <button className="button button--primary" disabled={sending || !captchaToken} type="submit">
               {sending ? "Sending…" : "Email me a code"}
             </button>
           </form>
