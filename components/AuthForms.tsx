@@ -5,6 +5,7 @@ import Link from "next/link";
 import { signInAction, signUpAction, type AuthFormState } from "@/app/auth/actions";
 import { GoogleSignInButton } from "./GoogleSignInButton";
 import { Button, Field } from "./ui";
+import { AuthCaptcha } from "./AuthCaptcha";
 
 const INITIAL_STATE: AuthFormState = {};
 
@@ -22,6 +23,7 @@ export function AuthForms({ initialMode = "signin" }: { initialMode?: "signin" |
 
 function SignInForm() {
   const [state, action, pending] = useActionState(signInAction, INITIAL_STATE);
+  const [captchaToken, setCaptchaToken] = useState("");
   return (
     <div className="auth-form">
       <h1>Welcome back.</h1>
@@ -34,7 +36,8 @@ function SignInForm() {
         <Field label="Email"><input name="email" type="email" autoComplete="email" required /></Field>
         <Field label="Password"><input name="password" type="password" autoComplete="current-password" required /></Field>
         {state.error ? <p className="field-error" role="alert">{state.error}</p> : null}
-        <Button disabled={pending} type="submit">{pending ? "Signing in…" : "Sign in"}</Button>
+        <AuthCaptcha attempt={state} onToken={setCaptchaToken} />
+        <Button disabled={pending || !captchaToken} type="submit">{pending ? "Signing in…" : "Sign in"}</Button>
       </form>
       <p className="auth-help"><Link href="/auth/forgot-password">Forgot password?</Link></p>
     </div>
@@ -43,6 +46,7 @@ function SignInForm() {
 
 function SignUpForm() {
   const [state, action, pending] = useActionState(signUpAction, INITIAL_STATE);
+  const [captchaToken, setCaptchaToken] = useState("");
   const [ageConfirmed, setAgeConfirmed] = useState(false);
   const [formValues, setFormValues] = useState({ username: "", displayName: "", email: "" });
   return (
@@ -61,7 +65,8 @@ function SignUpForm() {
         <label className="age-confirmation"><input checked={ageConfirmed} name="ageConfirmed" onChange={(event) => setAgeConfirmed(event.target.checked)} required type="checkbox" /><span>I confirm I am at least 18.</span></label>
         <p className="auth-legal">By continuing, you agree to the <Link href="/terms">Terms of Use</Link> and acknowledge the <Link href="/privacy">Privacy Notice</Link>.</p>
         {state.error ? <p className="field-error" role="alert">{state.error}</p> : null}
-        <Button disabled={pending} type="submit">{pending ? "Creating account…" : "Create my account"}</Button>
+        <AuthCaptcha attempt={state} onToken={setCaptchaToken} />
+        <Button disabled={pending || !captchaToken} type="submit">{pending ? "Creating account…" : "Create my account"}</Button>
       </form>
     </div>
   );

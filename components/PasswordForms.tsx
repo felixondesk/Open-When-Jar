@@ -1,14 +1,16 @@
 "use client";
 
-import { useActionState, useEffect, useRef } from "react";
+import { useActionState, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { forgotPasswordAction, resetPasswordAction, signOutAction, updatePasswordAction, type PasswordFormState } from "@/app/auth/actions";
 import { Button, Field } from "./ui";
+import { AuthCaptcha } from "./AuthCaptcha";
 
 const INITIAL_STATE: PasswordFormState = {};
 
 export function ForgotPasswordForm() {
   const [state, action, pending] = useActionState(forgotPasswordAction, INITIAL_STATE);
+  const [captchaToken, setCaptchaToken] = useState("");
   return (
     <div className="auth-form">
       <h1>Reset your password.</h1>
@@ -17,7 +19,8 @@ export function ForgotPasswordForm() {
         <Field label="Email"><input autoComplete="email" name="email" required type="email" /></Field>
         {state.error ? <p className="field-error" role="alert">{state.error}</p> : null}
         {state.success ? <p className="auth-success" role="status">{state.success}</p> : null}
-        <Button disabled={pending} type="submit">{pending ? "Sending…" : "Send reset link"}</Button>
+        <AuthCaptcha attempt={state} onToken={setCaptchaToken} />
+        <Button disabled={pending || !captchaToken} type="submit">{pending ? "Sending…" : "Send reset link"}</Button>
       </form>
       <p className="auth-help"><Link href="/auth">Back to sign in</Link></p>
     </div>

@@ -74,3 +74,10 @@
 - Visiting `/auth/reset-password` with that ordinary Google session displayed “Reset link unavailable” rather than a password-change form. The recovery request form also loaded. Email delivery and successful password recovery still require an email/password test account and the user's completion of any password change.
 - Supabase's live Email settings confirm leaked-password protection is only available on Pro and above; the organization remains Free. Secure email change, secure password change, and current-password requirements remain enabled.
 - Cloudflare requires sign-in before a Turnstile widget can be created. CAPTCHA remains disabled until provider configuration and app integration can be completed together.
+
+### Turnstile integration — 2026-10-13
+
+- User created a Managed Turnstile widget restricted to `openwhenjar.bond`. Its public site key is in `lib/captcha.ts`; the secret is not stored in the repository.
+- Sign-in, signup, and recovery-request forms now render a shared widget, disable submission until a token exists, clear expired tokens, and refresh verification after a returned action result. Loading failures have a retry control.
+- Server actions reject missing, malformed and oversized tokens, then pass the token to Supabase Auth for provider verification. CSP permits only the required Cloudflare script and frame origin.
+- Six security tests, three admin tests, TypeScript, and the production build passed. Supabase enforcement and live browser verification are pending the deployment and credential-transfer approval.

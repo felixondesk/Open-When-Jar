@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { headers } from "next/headers";
 import { getAuthOrigin } from "@/lib/auth-origin";
 import { createClient } from "@/lib/supabase/server";
+import { getCaptchaToken } from "@/lib/captcha";
 
 export type AuthFormState = {
   error?: string;
@@ -27,6 +28,8 @@ export async function signUpAction(
   _previousState: AuthFormState,
   formData: FormData,
 ): Promise<AuthFormState> {
+  const captchaToken = getCaptchaToken(formData);
+  if (!captchaToken) return { error: "Complete the security check and try again." };
   const email = String(formData.get("email") ?? "").trim().toLowerCase();
   const password = String(formData.get("password") ?? "");
   const username = String(formData.get("username") ?? "").trim().toLowerCase();
@@ -51,6 +54,7 @@ export async function signUpAction(
       email,
       password,
       options: {
+        captchaToken,
         emailRedirectTo,
         data: { username, display_name: displayName },
       },
@@ -95,10 +99,12 @@ export async function signInAction(
   _previousState: AuthFormState,
   formData: FormData,
 ): Promise<AuthFormState> {
+  const captchaToken = getCaptchaToken(formData);
+  if (!captchaToken) return { error: "Complete the security check and try again." };
   const email = String(formData.get("email") ?? "").trim().toLowerCase();
   const password = String(formData.get("password") ?? "");
   const supabase = await createClient();
-  const { error } = await supabase.auth.signInWithPassword({ email, password });
+  const { error } = await supabase.auth.signInWithPassword({ email, password, options: { captchaToken } });
 
   if (error) return { error: "That email and password didn’t match." };
   redirect("/app");
@@ -114,13 +120,15 @@ export async function forgotPasswordAction(
   _previousState: PasswordFormState,
   formData: FormData,
 ): Promise<PasswordFormState> {
+  const captchaToken = getCaptchaToken(formData);
+  if (!captchaToken) return { error: "Complete the security check and try again." };
   const email = String(formData.get("email") ?? "").trim().toLowerCase();
   if (!/^\S+@\S+\.\S+$/.test(email)) return { error: "Enter a valid email address." };
 
   const redirectTo = new URL("/auth/confirm", getAuthOrigin(await headers())).toString();
   const supabase = await createClient();
   try {
-    const { error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo });
+    const { error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo, captchaToken });
     if (error) return { error: "We couldn’t send a reset link right now. Please try again later." };
   } catch {
     return { error: "We couldn’t reach the account service. Check your connection and try again." };

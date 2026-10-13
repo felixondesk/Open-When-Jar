@@ -2,6 +2,20 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { getSafeAuthRedirect, getAuthOrigin } from "../lib/auth-origin.ts";
 import { readWebhookBody } from "../supabase/functions/dodo-test-webhook/body.ts";
+import { getCaptchaToken } from "../lib/captcha.ts";
+
+test("CAPTCHA token rejects missing, malformed and oversized form fields", () => {
+  const form = new FormData();
+  assert.equal(getCaptchaToken(form), null);
+  for (const value of ["", "bad token", "bad\ntoken", "x".repeat(2049)]) {
+    form.set("captchaToken", value);
+    assert.equal(getCaptchaToken(form), null);
+  }
+  form.set("captchaToken", new Blob(["fake-token"]));
+  assert.equal(getCaptchaToken(form), null);
+  form.set("captchaToken", "valid-looking-token");
+  assert.equal(getCaptchaToken(form), "valid-looking-token");
+});
 
 test("webhook body preserves signed bytes and rejects oversized input", async () => {
   const body = '{"test":"hello"}';
