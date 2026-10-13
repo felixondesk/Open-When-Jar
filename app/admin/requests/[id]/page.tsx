@@ -4,6 +4,8 @@ import { signOutAction } from "@/app/auth/actions";
 import { getAdminAccess } from "@/lib/admin";
 import { createClient } from "@/lib/supabase/server";
 import { UpdateRequestForm } from "../UpdateRequestForm";
+import { parseSupportConversation } from "@/lib/support";
+import { SupportMessages } from "@/components/SupportMessages";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Request history — Open When Jar Admin", robots: { index: false, follow: false } };
@@ -36,6 +38,9 @@ export default async function AdminRequestDetailPage({ params }: { params: Promi
   const result = data && typeof data === "object" && !Array.isArray(data) ? data : null;
   const request = isRequest(result?.request) ? result.request : null;
   const events = Array.isArray(result?.events) ? result.events.filter(isEvent) : [];
+  const canMessage = request?.requester_id !== null && request?.source === "app";
+  const conversationResult = request && canMessage ? await supabase.rpc("support_request_conversation", { p_request_id: id }) : null;
+  const conversation = parseSupportConversation(conversationResult?.data);
   return <main className="admin-requests-page admin-request-detail">
     <Link href="/admin/requests">← Inbox</Link>
     {error ? <p className="dashboard-notice field-error" role="alert">The request history is unavailable.</p> : !request ? <h1>Request not found</h1> : <>
@@ -45,7 +50,8 @@ export default async function AdminRequestDetailPage({ params }: { params: Promi
         {request.source === "email" ? <p>This ticket arrived by email. The sender address alone does not verify account ownership; account access, correction, export, and deletion requests must come from the signed-in Account form.</p> : null}
         {request.subject ? <p><strong>Subject:</strong> {request.subject}</p> : null}
         {request.source_reference ? <p><strong>Email reference:</strong> {request.source_reference}</p> : null}
-        <p className="admin-request-details">{request.details}</p><p>Current status: <strong>{request.status.replaceAll("_", " ")}</strong></p><UpdateRequestForm id={request.id} currentStatus={request.status} /></section>
+        <p className="admin-request-details">{request.details}</p><p>Current status: <strong>{request.status.replaceAll("_", " ")}</strong></p><UpdateRequestForm id={request.id} currentStatus={request.status} canMessage={canMessage} /></section>
+      {canMessage ? conversation && !conversationResult?.error ? <SupportMessages messages={conversation.messages} /> : <p className="field-error" role="alert">The conversation is unavailable right now.</p> : null}
       <section className="admin-panel"><h2>Case history</h2>{events.length ? <ol>{events.map((event) => <li key={event.id}><strong>{event.from_status ? `${event.from_status.replaceAll("_", " ")} → ` : ""}{event.to_status.replaceAll("_", " ")}</strong><small>{new Date(event.occurred_at).toLocaleString("en-US", { timeZone: "UTC" })} UTC · {event.actor_id ? `Actor ${event.actor_id.slice(0, 8)}` : "Email intake"}</small>{event.note ? <p>{event.note}</p> : null}</li>)}</ol> : <p>No history recorded.</p>}</section>
     </>}
   </main>;

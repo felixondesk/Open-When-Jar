@@ -48,7 +48,7 @@ export default async function AdminRequestsPage({ searchParams }: { searchParams
       <p>{row.contact_email ? `From ${row.contact_email}` : row.username ? `@${row.username}` : "Account unavailable"} · {new Date(row.created_at).toLocaleString("en-US", { timeZone: "UTC" })} UTC · <Link href={`/admin/requests/${row.id}`}>Case {row.id.slice(0, 8)} and history</Link></p>
       {row.subject ? <p><strong>{row.subject}</strong></p> : null}
       <p className="admin-request-details">{row.details}</p>
-      <UpdateRequestForm id={row.id} currentStatus={row.status} />
+      <UpdateRequestForm id={row.id} currentStatus={row.status} canMessage={row.requester_id !== null && row.source === "app"} />
     </article>)}</div> : <p className="admin-request-empty">No requests match this filter.</p>}
     <footer>{page > 1 ? <Link href={query(page - 1)}>Previous</Link> : null}{page * 25 < total ? <Link href={query(page + 1)}>Next</Link> : null}</footer>
   </main>;

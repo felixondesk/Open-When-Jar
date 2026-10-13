@@ -11,14 +11,21 @@ export async function updateRequestAction(_previous: UpdateRequestState, formDat
   const requestId = String(formData.get("requestId") ?? "");
   const status = String(formData.get("status") ?? "");
   const note = String(formData.get("note") ?? "").trim();
-  if (!/^[0-9a-f-]{36}$/i.test(requestId) || !STATUSES.has(status) || !note || note.length > 1000) {
+  const message = String(formData.get("message") ?? "").trim();
+  if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(requestId) || !STATUSES.has(status) || !note || note.length > 1000) {
     return { error: "Choose a new status and add a decision note of up to 1,000 characters." };
+  }
+  if (message.length > 2000 || (status === "waiting_on_user" && !message)) {
+    return { error: "Add a message for the customer when waiting for their reply. Use up to 2,000 characters." };
   }
   const supabase = await createClient();
   const { data: claimsData } = await supabase.auth.getClaims();
   if (!getAdminAccess(claimsData?.claims as Record<string, unknown> | undefined).isAdmin) return { error: "Admin MFA is required." };
-  const { error } = await supabase.rpc("admin_update_support_request", { p_request_id: requestId, p_status: status, p_note: note });
+  const { error } = await supabase.rpc("admin_update_support_request_with_message", { p_request_id: requestId, p_status: status, p_note: note, p_message: message });
   if (error) return { error: "The request could not be updated. Check its current status and try again." };
   revalidatePath("/admin/requests");
-  return { success: "Status saved. Refresh to see the updated queue." };
+  revalidatePath(`/admin/requests/${requestId}`);
+  revalidatePath("/app/requests");
+  revalidatePath(`/app/requests/${requestId}`);
+  return { success: message ? "Status saved and customer message sent." : "Status saved." };
 }

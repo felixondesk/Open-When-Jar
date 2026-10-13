@@ -8,6 +8,7 @@
     "build": "next build",
     "start": "next start",
     "test:admin": "node --experimental-strip-types --test tests/admin.test.mjs",
+    "test:support": "node --experimental-strip-types --test tests/support.test.mjs",
     "typecheck": "tsc --noEmit",
     "check": "npm run typecheck && npm run build"
   },

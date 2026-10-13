@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { RequestForm } from "./RequestForm";
+import { RequestRefresh } from "./RequestRefresh";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Account requests — Open When Jar", robots: { index: false, follow: false } };
@@ -16,6 +17,7 @@ export default async function AccountRequestsPage() {
     .eq("requester_id", userId).order("created_at", { ascending: false }).limit(25);
   return (
     <main className="request-page">
+      <RequestRefresh />
       <Link href="/app?view=account">← Back to Account</Link>
       <h1>Account requests</h1>
       <p>Ask for help, report a concern, or request access, correction, export, or deletion. You can track requests here.</p>
@@ -23,7 +25,7 @@ export default async function AccountRequestsPage() {
         <RequestForm />
         <section aria-labelledby="request-history-heading">
           <h2 id="request-history-heading">Your requests</h2>
-          {requests?.length ? <ul>{requests.map((request) => <li key={request.id}><strong>{label(request.category)}</strong><span>{request.status.replaceAll("_", " ")}</span><small>{new Date(request.created_at).toLocaleDateString("en-US", { timeZone: "UTC" })} · {request.id.slice(0, 8)}</small></li>)}</ul> : <p>No requests yet.</p>}
+          {requests?.length ? <ul>{requests.map((request) => <li key={request.id}><Link href={`/app/requests/${request.id}`}><strong>{label(request.category)} · {request.id.slice(0, 8)}</strong></Link><span>{request.status.replaceAll("_", " ")}</span><small>{new Date(request.created_at).toLocaleDateString("en-US", { timeZone: "UTC" })}</small></li>)}</ul> : <p>No requests yet.</p>}
         </section>
       </>}
     </main>

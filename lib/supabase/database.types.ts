@@ -536,6 +536,18 @@ export type Database = {
         Args: { p_request_id: string }
         Returns: Json
       }
+      support_request_conversation: {
+        Args: { p_request_id: string }
+        Returns: Json
+      }
+      reply_to_support_request: {
+        Args: { p_request_id: string; p_message: string }
+        Returns: undefined
+      }
+      admin_update_support_request_with_message: {
+        Args: { p_request_id: string; p_status: string; p_note: string; p_message?: string }
+        Returns: undefined
+      }
       admin_operational_analytics: {
         Args: { p_days?: number }
         Returns: Json
