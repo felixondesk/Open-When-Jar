@@ -380,6 +380,7 @@ function friendlyJarError(message = "") {
 }
 
 function friendlyCircleError(message = "") {
+  if (message.includes("PLAN_REQUIRED")) return "A one-time plan is needed before sending a Circle request.";
   if (message.includes("CIRCLE_USER_NOT_FOUND")) return "That username isn’t on Open When Jar yet.";
   if (message.includes("CIRCLE_SELF")) return "Your own username is already yours—invite someone else.";
   if (message.includes("CIRCLE_ALREADY_CONNECTED")) return "They’re already in your circle.";
