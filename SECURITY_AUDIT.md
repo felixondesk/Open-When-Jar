@@ -80,4 +80,8 @@
 - User created a Managed Turnstile widget restricted to `openwhenjar.bond`. Its public site key is in `lib/captcha.ts`; the secret is not stored in the repository.
 - Sign-in, signup, and recovery-request forms now render a shared widget, disable submission until a token exists, clear expired tokens, and refresh verification after a returned action result. Loading failures have a retry control.
 - Server actions reject missing, malformed and oversized tokens, then pass the token to Supabase Auth for provider verification. CSP permits only the required Cloudflare script and frame origin.
-- Six security tests, three admin tests, TypeScript, and the production build passed. Supabase enforcement and live browser verification are pending the deployment and credential-transfer approval.
+- Six security tests, three admin tests, TypeScript, and the production build passed. Commit `a7c1f28` was pushed and verified READY/current on the production domain.
+- With explicit user approval, the secret was transferred directly from Cloudflare to Supabase Auth and CAPTCHA protection enabled. Reloading the dashboard confirmed the saved Turnstile provider, enabled protection, and masked secret. This supersedes the earlier pending CAPTCHA entries.
+- Live sign-in, signup, and recovery-request forms acquired tokens and enabled submission. A synthetic nonexistent-account sign-in reached the expected credential-mismatch response and acquired a fresh token for retry.
+- Direct Supabase Auth requests to signup, password login, and recovery each rejected both missing and invalid tokens with HTTP 400 CAPTCHA errors (six rejection checks). These probes created no accounts or recovery emails.
+- Successful email/password login and recovery email delivery/password change remain unverified; the existing tested account uses Google sign-in. Leaked-password protection still requires a paid Supabase plan.
