@@ -30,3 +30,23 @@ export function parsePlanStatus(value: unknown): PlanStatus | null {
     invitations,
   };
 }
+
+type PlanResponse = { data: unknown; error: unknown };
+type PlanRequest = () => PromiseLike<PlanResponse>;
+
+export async function getPlanStatusOrClaimInvitation(readPlan: PlanRequest, claimInvitation: PlanRequest, initialResult?: PlanResponse): Promise<PlanStatus | null> {
+  const initial = initialResult ?? await readPlan();
+  if (initial.error) throw new Error("Plan status is unavailable");
+  const plan = parsePlanStatus(initial.data);
+  if (plan) return plan;
+
+  // Existing members already have a plan; only newcomers need to claim a seat.
+  const claim = await claimInvitation();
+  if (claim.error) throw new Error("Seat invitation could not be claimed");
+  if (!claim.data) return null;
+
+  // The claim changes membership, so read access again after it completes.
+  const refreshed = await readPlan();
+  if (refreshed.error) throw new Error("Plan status is unavailable");
+  return parsePlanStatus(refreshed.data);
+}

@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
+    "test:workspace": "node --experimental-strip-types --test tests/workspace.test.mjs",
     "test:security": "node --experimental-strip-types --test tests/security.test.mjs",
     "dev": "next dev --port 3127",
     "build": "next build",

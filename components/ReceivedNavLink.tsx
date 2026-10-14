@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import { NavigationLink } from "@/components/NavigationLink";
 import { useEffect, useState } from "react";
 
 export const RECEIVED_JARS_UPDATED = "open-when-jar:received-jars-updated";
@@ -40,9 +40,9 @@ export function ReceivedNavLink({ jarIds, userId, active }: Props) {
   }, [active, jarIds, userId]);
 
   return (
-    <Link aria-current={active ? "page" : undefined} aria-label={unseenCount ? `Received, ${unseenCount} new ${unseenCount === 1 ? "Jar" : "Jars"}` : "Received"} className={active ? "is-active" : ""} href="/app?view=received">
+    <NavigationLink aria-current={active ? "page" : undefined} aria-label={unseenCount ? `Received, ${unseenCount} new ${unseenCount === 1 ? "Jar" : "Jars"}` : "Received"} className={active ? "is-active" : ""} href="/app?view=received">
       <span>Received</span>
       {unseenCount > 0 ? <span aria-hidden="true" className="workspace-nav-badge">{unseenCount > 9 ? "9+" : unseenCount}</span> : null}
-    </Link>
+    </NavigationLink>
   );
 }

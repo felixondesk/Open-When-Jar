@@ -11,9 +11,10 @@ import { NewJarForm } from "@/components/NewJarForm";
 import { NotificationCenter } from "@/components/NotificationCenter";
 import { UpdatePasswordForm } from "@/components/PasswordForms";
 import { ReceivedNavLink } from "@/components/ReceivedNavLink";
+import { NavigationLink } from "@/components/NavigationLink";
 import { LogOut } from "@/components/icons";
 import { Brand } from "@/components/ui";
-import { parsePlanStatus } from "@/lib/plan-status";
+import { getPlanStatusOrClaimInvitation } from "@/lib/plan-status";
 import { getJarPlan } from "@/lib/plans";
 import { getSeatInvitationEmailConfig } from "@/lib/seat-invitation-email";
 import { createClient } from "@/lib/supabase/server";
@@ -49,30 +50,33 @@ type CircleRow = {
 };
 
 export default async function DashboardPage({ searchParams }: { searchParams: Promise<{ created?: string; sealed?: string; checkout?: string; error?: string; view?: string; sender?: string; circle?: string; circleError?: string; invite?: string; inviteError?: string }> }) {
+  const params = await searchParams;
+  const view: WorkspaceView = params.view === "received" || params.view === "circle" || params.view === "account" ? params.view : "send";
   const supabase = await createClient();
   const { data: claimsData } = await supabase.auth.getClaims();
   const userId = claimsData?.claims?.sub;
   if (!userId) redirect("/auth");
 
-  const [profileResult, params] = await Promise.all([
+  const [profileResult, initialPlan] = await Promise.all([
     supabase.from("profiles").select("username, display_name, username_finalized").eq("id", userId).single(),
-    searchParams,
+    supabase.rpc("get_plan_status"),
   ]);
 
   if (profileResult.error) redirect("/auth?error=profile");
   if (!profileResult.data.username_finalized) redirect("/auth/username");
 
-  const { error: claimError } = await supabase.rpc("claim_plan_invitation");
-  if (claimError) throw new Error("Seat invitation could not be claimed");
-  const { data: planData, error: planError } = await supabase.rpc("get_plan_status");
-  if (planError) throw new Error("Plan status is unavailable");
-  const plan = parsePlanStatus(planData);
+  const plan = await getPlanStatusOrClaimInvitation(
+    () => supabase.rpc("get_plan_status"),
+    () => supabase.rpc("claim_plan_invitation"),
+    initialPlan,
+  );
   if (!plan) redirect(params.checkout === "returned" ? "/app/unlock?checkout=returned" : "/app/unlock");
 
-  const [{ data: sentData, error: sentError }, { data: receivedData, error: receivedError }, { data: circleData, error: circleError }] = await Promise.all([
-    supabase.from("jars").select("id, status, theme, plan_code, amount_cents, recipient_limit, created_at, hosting_ends_at, jar_recipients(position, recipient:profiles!jar_recipients_recipient_id_fkey(username, display_name)), envelope_headers(id, label, unlock_at, position)").eq("creator_id", userId).order("created_at", { ascending: false }),
-    supabase.from("jar_recipients").select("jar:jars!inner(id, status, theme, plan_code, amount_cents, recipient_limit, created_at, hosting_ends_at, creator:profiles!jars_creator_id_fkey(username, display_name), envelope_headers(id, label, unlock_at, position))").eq("recipient_id", userId).in("jar.status", ["sealed", "hosting_ended"]).order("created_at", { referencedTable: "jars", ascending: false }),
-    supabase.from("circle_connections").select("id, requester_id, addressee_id, requester_username_snapshot, requester_display_name_snapshot, addressee_username_snapshot, addressee_display_name_snapshot, status").or(`requester_id.eq.${userId},addressee_id.eq.${userId}`).order("created_at", { ascending: false }),
+  const [{ data: sentData, error: sentError }, { data: receivedData, error: receivedError }, { data: circleData, error: circleError }, accountAuth] = await Promise.all([
+    view === "send" ? supabase.from("jars").select("id, status, theme, plan_code, amount_cents, recipient_limit, created_at, hosting_ends_at, jar_recipients(position, recipient:profiles!jar_recipients_recipient_id_fkey(username, display_name)), envelope_headers(id, label, unlock_at, position)").eq("creator_id", userId).order("created_at", { ascending: false }) : { data: [], error: null },
+    supabase.from("jar_recipients").select(view === "received" ? "jar:jars!inner(id, status, theme, plan_code, amount_cents, recipient_limit, created_at, hosting_ends_at, creator:profiles!jars_creator_id_fkey(username, display_name), envelope_headers(id, label, unlock_at, position))" : "jar:jars!inner(id)").eq("recipient_id", userId).in("jar.status", ["sealed", "hosting_ended"]).order("created_at", { referencedTable: "jars", ascending: false }),
+    view === "send" || view === "circle" ? supabase.from("circle_connections").select("id, requester_id, addressee_id, requester_username_snapshot, requester_display_name_snapshot, addressee_username_snapshot, addressee_display_name_snapshot, status").or(`requester_id.eq.${userId},addressee_id.eq.${userId}`).order("created_at", { ascending: false }) : { data: [], error: null },
+    view === "account" ? supabase.auth.getUser() : null,
   ]);
 
   const jarsRemaining = Math.max(0, plan.jarLimit - plan.jarsUsed);
@@ -99,8 +103,6 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
     };
   });
   const acceptedCircle = circleConnections.filter((connection) => connection.status === "accepted").map((connection) => connection.person);
-  const view: WorkspaceView = params.view === "received" || params.view === "circle" || params.view === "account" ? params.view : "send";
-  const accountAuth = view === "account" ? await supabase.auth.getUser() : null;
   const hasEmailPassword = accountAuth?.data.user?.identities?.some((identity) => identity.provider === "email") ?? false;
 
   return (
@@ -108,10 +110,10 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
       <header className="workspace-header">
         <Brand />
         <nav aria-label="Jar workspace">
-          <Link aria-current={view === "send" ? "page" : undefined} className={view === "send" ? "is-active" : ""} href="/app?view=send">Send</Link>
+          <NavigationLink aria-current={view === "send" ? "page" : undefined} className={view === "send" ? "is-active" : ""} href="/app?view=send">Send</NavigationLink>
           <ReceivedNavLink active={view === "received"} jarIds={received.map((jar) => jar.id)} userId={userId} />
-          <Link aria-current={view === "circle" ? "page" : undefined} className={view === "circle" ? "is-active" : ""} href="/app?view=circle">My Circle</Link>
-          <Link aria-current={view === "account" ? "page" : undefined} className={view === "account" ? "is-active" : ""} href="/app?view=account">Account</Link>
+          <NavigationLink aria-current={view === "circle" ? "page" : undefined} className={view === "circle" ? "is-active" : ""} href="/app?view=circle">My Circle</NavigationLink>
+          <NavigationLink aria-current={view === "account" ? "page" : undefined} className={view === "account" ? "is-active" : ""} href="/app?view=account">Account</NavigationLink>
         </nav>
         <div className="workspace-header__account">
           <NotificationCenter />

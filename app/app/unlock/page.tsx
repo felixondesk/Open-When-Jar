@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { UnlockExperience } from "@/components/UnlockExperience";
+import { getPlanStatusOrClaimInvitation } from "@/lib/plan-status";
 
 export const metadata = { title: "Choose a plan — Open When Jar", robots: { index: false, follow: false } };
 
@@ -11,10 +12,10 @@ export default async function UnlockPage({ searchParams }: { searchParams: Promi
   const userId = claimsData?.claims?.sub;
   if (!userId) redirect("/auth");
 
-  const { error: claimError } = await supabase.rpc("claim_plan_invitation");
-  if (claimError) throw new Error("Seat invitation could not be claimed");
-  const { data: plan, error } = await supabase.rpc("get_plan_status");
-  if (error) throw new Error("Plan status is unavailable");
+  const plan = await getPlanStatusOrClaimInvitation(
+    () => supabase.rpc("get_plan_status"),
+    () => supabase.rpc("claim_plan_invitation"),
+  );
   if (plan) redirect(params.checkout === "returned" ? "/app?checkout=returned" : "/app");
 
   const checkoutNotice = params.checkout === "returned"
