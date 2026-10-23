@@ -21,10 +21,7 @@ export function LegalPage({ eyebrow, title, summary, children }: LegalPageProps)
           <span>{eyebrow}</span>
           <h1>{title}</h1>
           <p>{summary}</p>
-          <small>Last updated 23 September 2026 · Pre-launch version</small>
-        </div>
-        <div className="legal-notice">
-          Open When Jar is in pre-launch development and does not accept live payments. This version separates available features from planned product rules. The legal operator identity, working privacy and support contacts, retention operations, and jurisdiction-specific terms must be completed before paid launch.
+          <small>Last updated 23 October 2026</small>
         </div>
         <div className="legal-content">{children}</div>
       </article>

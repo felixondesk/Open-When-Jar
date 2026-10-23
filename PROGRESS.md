@@ -119,6 +119,7 @@ Do not add passwords, API keys, webhook secrets, database passwords, or OAuth cl
 - [ ] **Codex:** Run the full authenticated two-account browser journey for every critical permission boundary.
 - [ ] **Codex:** Add automated tests for authentication, RLS boundaries, unlock times, plan limits, payment transitions, duplicate webhooks, and media authorization.
 - [ ] **Felix + Codex:** Finish the unchecked decisions in `NEED_TO_BE_DISCUSSED.md`, including refund wording, seller identity, privacy policy, terms, and support contact. Prices and hosting duration are confirmed.
+- [x] 23 October 2026: Terms, Privacy Notice, and Refund Policy rewritten as production versions (pre-launch banner removed). Seller shown as Dodo Payments Merchant of Record with no personal details; contact is hello@openwhenjar.bond; Cloudflare Turnstile, Vercel hosting, keepsake download, breach notice, liability cap, and retention periods added. Still blocked: `lib/dodo-payments.ts` is hard-coded to `test_mode`, and export/deletion requests have no admin tooling.
 
 ### Google login
 
