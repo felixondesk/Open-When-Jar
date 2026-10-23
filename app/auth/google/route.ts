@@ -1,38 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
+import { getAuthOrigin } from "@/lib/auth-origin";
 import { createClient } from "@/lib/supabase/server";
 
-function getRequestOrigin(request: NextRequest) {
-  const requestUrl = new URL(request.url);
-  const originHeader = request.headers.get("origin");
-  const forwardedHost = request.headers.get("x-forwarded-host")?.split(",")[0].trim();
-  const hostHeader = request.headers.get("host");
-  const requestHosts = [hostHeader, forwardedHost]
-    .filter((host): host is string => Boolean(host))
-    .map((host) => host.toLowerCase());
-
-  for (const candidate of [originHeader, request.headers.get("referer")]) {
-    if (!candidate) continue;
-    try {
-      const origin = new URL(candidate);
-      if (requestHosts.includes(origin.host.toLowerCase())) return origin.origin;
-    } catch {
-      // Try the next browser-provided origin hint.
-    }
-  }
-
-  const forwardedProtocol = request.headers.get("x-forwarded-proto")?.split(",")[0].trim();
-  const protocol = forwardedProtocol || requestUrl.protocol.slice(0, -1);
-  if (forwardedHost && forwardedHost.toLowerCase() !== requestUrl.host.toLowerCase()) {
-    return `${protocol}://${forwardedHost}`;
-  }
-  if (hostHeader && hostHeader.toLowerCase() !== requestUrl.host.toLowerCase()) {
-    return `${protocol}://${hostHeader}`;
-  }
-  return requestUrl.origin;
-}
-
 function redirectToAuth(request: NextRequest) {
-  const url = new URL("/auth?error=google", getRequestOrigin(request));
+  const url = new URL("/auth?error=google", getAuthOrigin(request.headers));
   return NextResponse.redirect(url, 303);
 }
 
@@ -42,7 +13,7 @@ async function getProviderUrl(request: NextRequest) {
     const { data, error } = await supabase.auth.signInWithOAuth({
       provider: "google",
       options: {
-        redirectTo: new URL("/auth/callback", getRequestOrigin(request)).toString(),
+        redirectTo: new URL("/auth/callback", getAuthOrigin(request.headers)).toString(),
       },
     });
     if (error || !data.url) return null;

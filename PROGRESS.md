@@ -131,6 +131,7 @@ Do not add passwords, API keys, webhook secrets, database passwords, or OAuth cl
 
 - [ ] **Felix:** Use the current Supabase Free plan initially. Upgrade when needed for production capacity or recovery; review leaked-password protection when the paid tier is enabled.
 - [ ] **Felix + Codex:** Set up daily encrypted off-site database/Auth/Storage backups with 30-day rotation, alert on stale or failed backups, and complete a restore rehearsal before paid launch.
+- [x] **Codex:** 23 October 2026 app security audit: upgraded Next.js 16.3.8 → 16.4.2 (clears the critical image-optimization/`use cache` RCE and Server Actions DoS advisories; `npm audit` is clean) and made `/auth/google` derive its OAuth redirect origin from the allow-listed `getAuthOrigin` helper instead of raw Host/Origin/Referer headers. `npm run check` passes.
 - [ ] **Codex:** Run a final Supabase security/performance advisor review after the payment and retention migrations. An interim post-auth/admin review is complete.
 - [ ] **Codex:** Verify the implemented CSP, HSTS, framing restrictions, Referrer-Policy, Permissions-Policy, request limits, and production-safe error responses on the deployed HTTPS site.
 - [ ] **Codex:** Add stronger upload inspection/malware handling and cleanup for abandoned upload reservations.
