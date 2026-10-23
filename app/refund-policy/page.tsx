@@ -5,6 +5,7 @@ import { LegalPage } from "@/components/LegalPage";
 export const metadata: Metadata = {
   title: "Refund policy — Open When Jar",
   description: "When Open When Jar purchases can be refunded and how to ask.",
+  alternates: { canonical: "/refund-policy" },
 };
 
 export default function RefundPolicyPage() {

@@ -5,6 +5,7 @@ import { LegalPage } from "@/components/LegalPage";
 export const metadata: Metadata = {
   title: "Privacy notice — Open When Jar",
   description: "How Open When Jar handles account details, personal messages, photos, voice notes, invitations, payments, and service data.",
+  alternates: { canonical: "/privacy" },
 };
 
 export default function PrivacyPage() {

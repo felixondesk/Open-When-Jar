@@ -5,6 +5,7 @@ import { LegalPage } from "@/components/LegalPage";
 export const metadata: Metadata = {
   title: "Terms of use — Open When Jar",
   description: "The rules for using Open When Jar: accounts, Jars, purchases, hosting, content, and liability.",
+  alternates: { canonical: "/terms" },
 };
 
 export default function TermsPage() {
