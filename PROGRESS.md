@@ -44,6 +44,8 @@ Do not add passwords, API keys, webhook secrets, database passwords, or OAuth cl
 - [x] 23 September 2026 Dodo sandbox integration: the plan and extra-Jar screens create hosted Test Mode sessions; a signed, idempotent webhook grants test-only entitlements after product/currency/amount checks. Seat invitations are reserved on fulfillment and emailed from the Edge Function when delivery is configured. The Test Mode migrations and webhook are active in the current Supabase project; no live payment path exists.
 - [x] 23 October 2026 SEO baseline: `metadataBase` from `NEXT_PUBLIC_SITE_URL`, Open Graph/Twitter tags and canonical URLs on the public pages, `/robots.txt` (disallows `/app`, `/admin`, `/api`, `/auth`), `/sitemap.xml` for the landing and legal pages, and Organization/WebSite/WebApplication JSON-LD on the landing page. The square brand mark is used as the share image; a 1200×630 Open Graph image is still to be designed.
 
+- [x] 24 October 2026 promo codes (local only, migration `20261024120000_add_promo_codes.sql` not applied): admins create and edit percentage codes (1–99%, valid-till date in UTC, active/inactive, total-use cap) at `/admin/promos`; the plan checkout has an optional code field. The database validates the code, enforces one use per account and the cap, and stores the discounted price on the intent. The checkout action mirrors it into a single-use Dodo discount, so the webhook's existing amount check covers discounted payments. Plans only; extra Jars do not accept codes. The same migration restores the extra-Jar Dodo product id that `20260923150020` had regressed. `npm run check` passes; `supabase/tests/promo_codes.sql` and a sandbox checkout with a code have not been run yet.
+
 ### Authentication and database
 
 - [x] Supabase email/password authentication and email-confirmation callback.
@@ -111,6 +113,7 @@ Do not add passwords, API keys, webhook secrets, database passwords, or OAuth cl
 
 - [ ] **Felix:** Complete Dodo Payments merchant approval and confirm that this digital product, countries, settlement currency, refunds, taxes, and final fees are supported.
 - [x] **Felix:** Create Dodo Test Mode products for the five seat plans and extra Jar credit.
+- [ ] **Felix:** Apply `20261024120000_add_promo_codes.sql`, run `supabase/tests/promo_codes.sql`, then create a code at `/admin/promos` and complete one sandbox plan checkout with it. Check that Dodo's discount line matches the price shown in the app.
 - [ ] **Felix:** Add the Test Mode API key to the local server environment; deploy the migration and Edge Function, then set the Dodo webhook and invitation-email secrets in Supabase. Confirm Dodo's INR pricing/adaptive-pricing configuration before testing India checkout.
 - [x] **Codex:** Implement Test Mode hosted checkout, signed webhook verification, idempotent test fulfilment, and test-only plan/extra-Jar grants.
 - [ ] **Codex + Felix:** Test the sandbox payment and webhook round trip; implement live-mode payment fulfillment, refunds/revocation, reconciliation, and recovery before any paid production launch.

@@ -13,6 +13,7 @@ const items = [
   { href: "/admin/records?kind=plans", label: "Plans & members", icon: "document", kind: "plans" },
   { href: "/admin/records?kind=payments", label: "Payments", icon: "card", kind: "payments" },
   { href: "/admin/records?kind=orders", label: "Legacy orders", icon: "orders", kind: "orders" },
+  { href: "/admin/promos", label: "Promo codes", icon: "tag" },
   { href: "/admin/analytics", label: "Analytics", icon: "revenue" },
   { href: "/admin/requests", label: "Request inbox", icon: "mail" },
 ] as const;

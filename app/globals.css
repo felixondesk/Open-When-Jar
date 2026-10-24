@@ -1149,6 +1149,15 @@ button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visib
 .payment-card__invites label { display: grid; gap: 5px; color: var(--muted); font-size: .72rem; }
 .payment-card__invites input { width: 100%; min-height: 44px; padding: 10px 12px; border: 1px solid #e6dce3; border-radius: 10px; background: #fff; color: var(--ink); font: inherit; }
 .payment-card__add-invite { justify-self: start; padding: 6px 0; color: var(--mulberry); font: 650 .8rem var(--sans); text-align: left; }
+.admin-promo-form { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; align-items: end; }
+.admin-promo-form > p { grid-column: 1 / -1; margin: 0; }
+.payment-card__promo { display: grid; gap: 6px; margin-top: 20px; color: var(--muted); font-size: .72rem; }
+.payment-card__promo > div { display: flex; gap: 8px; }
+.payment-card__promo input { flex: 1; min-width: 0; min-height: 44px; padding: 10px 12px; border: 1px solid #e6dce3; border-radius: 10px; background: #fff; color: var(--ink); font: inherit; text-transform: uppercase; }
+.payment-card__promo button { min-height: 44px; padding: 0 16px; border: 1px solid var(--mulberry); border-radius: 10px; color: var(--mulberry); font: 650 .8rem var(--sans); }
+.payment-card__promo button:disabled { opacity: .5; }
+.payment-card__promo-ok { margin: 0; color: var(--leaf); font-weight: 700; }
+.payment-card__total s { color: var(--muted); font-size: .6em; }
 .payment-card__total > span { color: var(--muted); font-size: .78rem; }
 .payment-card__total strong { color: var(--mulberry); font: 600 1.95rem/1 var(--serif); }
 .payment-card__total small { grid-column: 1 / -1; color: var(--muted); font-size: .67rem; }

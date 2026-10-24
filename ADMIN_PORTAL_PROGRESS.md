@@ -23,6 +23,10 @@ Signing in is not enough by itself: the verified account must have `app_metadata
 
 ## Completed
 
+### Promo codes (24 October, local only)
+
+- `/admin/promos` lists codes with name, code, discount %, valid-till date (UTC), status, and used/cap. Admins can create codes and edit everything except the code itself. The page goes through the AAL2-gated, audit-logged `admin_list_promo_codes` and `admin_upsert_promo_code` RPCs. Migration `20261024120000_add_promo_codes.sql` has not been applied yet.
+
 ### Administrator authentication
 
 - Added an editable email field to `/admin`.

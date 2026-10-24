@@ -1,9 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { useActionState, useState } from "react";
+import { startTransition, useActionState, useState } from "react";
 import { signOutAction } from "@/app/auth/actions";
-import { startPlanCheckoutAction } from "@/app/app/unlock/actions";
+import { checkPromoCodeAction, startPlanCheckoutAction } from "@/app/app/unlock/actions";
 import { EXTRA_JAR_PRICE, formatMarketPrice, getJarPlan, JAR_PLANS, type JarPlanCode, type PricingMarket } from "@/lib/plans";
 import { Button } from "./ui";
 
@@ -12,7 +12,17 @@ export function UnlockExperience({ checkoutNotice }: { checkoutNotice?: string }
   const [market, setMarket] = useState<PricingMarket>("global");
   const [inviteFieldCount, setInviteFieldCount] = useState(0);
   const [checkoutState, checkoutAction, checkoutPending] = useActionState(startPlanCheckoutAction, {});
+  const [promoState, promoAction, promoPending] = useActionState(checkPromoCodeAction, {});
+  const [promoCode, setPromoCode] = useState("");
   const plan = getJarPlan(planCode);
+  // Display only: the server recomputes the discounted price when checkout starts.
+  const appliedPercent = promoState.percentOff && promoState.code === promoCode.trim().toUpperCase() ? promoState.percentOff : 0;
+  const discounted = (amount: number) => Math.round(amount * (100 - appliedPercent) / 100);
+  const applyPromo = () => {
+    const data = new FormData();
+    data.set("promoCode", promoCode);
+    startTransition(() => promoAction(data));
+  };
 
   return (
     <section className="payment-page" aria-labelledby="payment-heading">
@@ -60,7 +70,18 @@ export function UnlockExperience({ checkoutNotice }: { checkoutNotice?: string }
             {inviteFieldCount < plan.seatCount - 1 ? <button className="payment-card__add-invite" onClick={() => setInviteFieldCount((count) => count + 1)} type="button">+ Add an email now</button> : null}
           </div> : null}
 
-          <div className="payment-card__total"><span>Listed one-time price</span><strong>{formatMarketPrice(plan, market)}</strong><small>Tax is added at checkout. No recurring charge.</small></div>
+          <div className="payment-card__promo">
+            <label htmlFor="checkout-promo-code">Promo code (optional)</label>
+            <div>
+              <input autoCapitalize="characters" autoComplete="off" id="checkout-promo-code" maxLength={30} name="promoCode" onChange={(event) => setPromoCode(event.target.value)} placeholder="LAUNCH20" value={promoCode} />
+              {/* Not a formAction: React would reset the uncontrolled invite fields after it ran. */}
+              <button disabled={promoPending || !promoCode.trim()} onClick={applyPromo} type="button">{promoPending ? "Checking…" : "Apply"}</button>
+            </div>
+            {appliedPercent ? <p className="payment-card__promo-ok" role="status">{appliedPercent}% off applied.</p> : null}
+            {promoState.error ? <p className="field-error" role="alert">{promoState.error}</p> : null}
+          </div>
+
+          <div className="payment-card__total"><span>{appliedPercent ? `One-time price with ${appliedPercent}% off` : "Listed one-time price"}</span><strong>{appliedPercent ? <><s>{formatMarketPrice(plan, market)}</s> {formatMarketPrice({ amountCents: discounted(plan.amountCents), amountInrPaise: discounted(plan.amountInrPaise) }, market)}</> : formatMarketPrice(plan, market)}</strong><small>Tax is added at checkout. No recurring charge.</small></div>
           <p className="pricing-note">Each seat can buy extra Jars for {formatMarketPrice(EXTRA_JAR_PRICE, market)} each. Extra Jars belong to that seat. Unused Jars do not expire while the account is active.</p>
 
           <Button className="payment-card__cta" disabled={checkoutPending} type="submit">{checkoutPending ? "Opening checkout…" : "Continue to test checkout"} <span aria-hidden="true">→</span></Button>

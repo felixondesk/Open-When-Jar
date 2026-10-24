@@ -1,4 +1,4 @@
-export type IconName = "alert" | "arrow" | "back" | "card" | "chevron" | "clock" | "document" | "home" | "jar" | "logout" | "mail" | "orders" | "people" | "revenue" | "search";
+export type IconName = "alert" | "arrow" | "back" | "card" | "chevron" | "clock" | "document" | "home" | "jar" | "logout" | "mail" | "orders" | "people" | "revenue" | "search" | "tag";
 
 export function AdminIcon({ name }: { name: IconName }) {
   const common = { fill: "none", stroke: "currentColor", strokeLinecap: "round" as const, strokeLinejoin: "round" as const, strokeWidth: 1.8 };
@@ -17,6 +17,7 @@ export function AdminIcon({ name }: { name: IconName }) {
       {name === "clock" ? <><circle {...common} cx="12" cy="12" r="9" /><path {...common} d="M12 7v6l4 2" /></> : null}
       {name === "card" ? <><rect {...common} height="15" rx="2" width="20" x="2" y="5" /><path {...common} d="M2 9h20M6 15h5" /></> : null}
       {name === "alert" ? <><circle {...common} cx="12" cy="12" r="9" /><path {...common} d="M12 7v6M12 17h.01" /></> : null}
+      {name === "tag" ? <><path {...common} d="M3 12V4h8l10 10-8 8z" /><circle cx="7.5" cy="8.5" fill="currentColor" r="1.2" /></> : null}
       {name === "chevron" ? <path {...common} d="m9 5 7 7-7 7" /> : null}
       {name === "arrow" ? <path {...common} d="M5 12h14m-5-5 5 5-5 5" /> : null}
     </svg>
