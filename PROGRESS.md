@@ -68,8 +68,8 @@ Do not add passwords, API keys, webhook secrets, database passwords, or OAuth cl
 - [x] Desktop notifications for received jars and unlocked letters while the authenticated site is open.
 - [x] Service worker and web-app manifest.
 - [x] 24 October 2026 transactional email: database triggers queue rows in `private.email_outbox`; the `send-emails` Edge Function sends them through Resend every minute. Emails cover: jar received, letter unlocked, recipient opened your jar, 7-day expiry reminder, hosting ended, Circle request/accepted, support received/reply/status (one email when a reply also changes status), password/email changed, welcome (after email confirmation), and new-registration alerts to hello@. Letter text, labels and media never enter an email. Live in production.
-- [x] 24 October 2026 hosting expiry: `expire_jars_batch` runs hourly (deletes letter content at hosting end; earliest jar ends September 2029). Unlock and expiry-reminder emails are queued by `enqueue_scheduled_emails` every 5 minutes. The older `jar-expiry-reminder` Edge Function and `private.jar_expiry_reminders` table are superseded and unused.
-- [ ] **Codex:** Add a worker that deletes Storage objects listed in `private.expired_media_cleanup` before the first jar expires (September 2029).
+- [x] 24 October 2026 hosting expiry: `expire_jars_batch` runs hourly (deletes letter content at hosting end; earliest jar ends September 2029). Unlock and expiry-reminder emails are queued by `enqueue_scheduled_emails` every 5 minutes.
+- [x] Expired media: `send-emails` removes Storage objects listed in `private.expired_media_cleanup` each minute (migration `20261024183717_expired_media_cleanup`, live in production). The unused `jar-expiry-reminder` function, its RPCs and queue table are removed; delete the deployed function from the Supabase dashboard.
 
 ### Test accounts
 
