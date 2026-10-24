@@ -4,5 +4,8 @@ verify_jwt = false
 [functions.jar-expiry-reminder]
 verify_jwt = false
 
+[functions.send-emails]
+verify_jwt = false
+
 [functions.support-email-intake]
 verify_jwt = false
