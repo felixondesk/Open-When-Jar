@@ -29,6 +29,8 @@ export async function startPlanCheckoutAction(
   if (new Set(inviteEmails).size !== inviteEmails.length) {
     return { error: "Use a different email address for each extra seat." };
   }
+  const promoCode = normalizePromoCode(formData.get("promoCode"));
+  if (promoCode === null) return { error: promoErrorMessage() };
   if (inviteEmails.length && !getSeatInvitationEmailConfig()) {
     return { error: "Invitation email is not configured yet. No checkout was started." };
   }
@@ -53,6 +55,7 @@ export async function startPlanCheckoutAction(
     p_plan_code: plan.code,
     p_currency: currency,
     p_invite_emails: inviteEmails,
+    p_promo_code: promoCode || null,
   });
   if (intentError || !intentRows?.length) return { error: checkoutIntentError(intentError?.message) };
   const productId = intentRows[0].product_id;
@@ -70,19 +73,32 @@ export async function startPlanCheckoutAction(
   let checkoutUrl: string;
   try {
     const dodo = getDodoTestClient();
+    const { list_amount_minor: listAmount, expected_amount_minor: expectedAmount, percent_off: percentOff } = intentRows[0];
     const productCart = [{ product_id: productId, quantity: 1 }];
-    const preview = await dodo.checkoutSessions.preview({ product_cart: productCart, billing_currency: currency });
+    // A single-use Dodo discount mirrors the DB-validated promo; users can never type codes into Dodo directly.
+    const discountCode = percentOff
+      ? (await dodo.discounts.create({
+        type: "percentage",
+        amount: percentOff * 100,
+        code: `OWJ${intentId.replaceAll("-", "").slice(0, 16).toUpperCase()}`,
+        usage_limit: 1,
+        restricted_to: [productId],
+        expires_at: new Date(Date.now() + 25 * 60 * 60 * 1000).toISOString(),
+      })).code
+      : undefined;
+    const preview = await dodo.checkoutSessions.preview({ product_cart: productCart, billing_currency: currency, discount_code: discountCode });
     if (
       preview.currency !== currency ||
       preview.product_cart.length !== 1 ||
       preview.product_cart[0].product_id !== productId ||
-      preview.current_breakup.discount !== 0 ||
-      preview.current_breakup.subtotal !== intentRows[0].expected_amount_minor
+      preview.current_breakup.subtotal !== listAmount ||
+      preview.current_breakup.subtotal - preview.current_breakup.discount !== expectedAmount
     ) {
       throw new Error("DODO_PRODUCT_PRICE_MISMATCH");
     }
     const session = await dodo.checkoutSessions.create({
       product_cart: productCart,
+      discount_code: discountCode,
       customer: { email, name: profile?.display_name ?? undefined },
       billing_currency: currency,
       return_url: checkoutReturnUrl(origin, intentId),
@@ -184,6 +200,32 @@ export async function startExtraJarCheckoutAction(formData: FormData): Promise<v
   redirect(checkoutUrl);
 }
 
+export type PromoCheckState = { percentOff?: number; code?: string; error?: string };
+
+export async function checkPromoCodeAction(_previousState: PromoCheckState, formData: FormData): Promise<PromoCheckState> {
+  const code = normalizePromoCode(formData.get("promoCode"));
+  if (!code) return { error: code === "" ? "Enter a promo code." : promoErrorMessage() };
+  const supabase = await createClient();
+  const { data: claimsData } = await supabase.auth.getClaims();
+  if (!claimsData?.claims?.sub) redirect("/auth");
+  const { data, error } = await supabase.rpc("check_promo_code", { p_code: code });
+  if (error || !data) return { error: promoErrorMessage(error?.message) };
+  return { percentOff: data, code };
+}
+
+/** Returns "" for no code, null for a malformed one. */
+function normalizePromoCode(value: FormDataEntryValue | null) {
+  const code = String(value ?? "").trim().toUpperCase();
+  if (!code) return "";
+  return /^[A-Z0-9_-]{3,30}$/.test(code) ? code : null;
+}
+
+function promoErrorMessage(message?: string) {
+  if (message?.includes("PROMO_ALREADY_USED")) return "You’ve already used this promo code.";
+  if (message?.includes("PROMO_USED_UP")) return "This promo code has reached its limit.";
+  return "That promo code isn’t valid or has expired.";
+}
+
 function checkoutReturnUrl(origin: string, intentId: string) {
   return `${origin}/app?checkout=returned&intent=${encodeURIComponent(intentId)}`;
 }
@@ -201,6 +243,7 @@ async function markCheckoutFailed(supabase: Awaited<ReturnType<typeof createClie
 }
 
 function checkoutIntentError(message?: string) {
+  if (message?.includes("PROMO_")) return promoErrorMessage(message);
   if (message?.includes("PLAN_ALREADY_ACTIVE")) return "Your account already has a plan.";
   if (message?.includes("CHECKOUT_ALREADY_PENDING")) return "A plan checkout is already open. Finish or close it before trying again.";
   if (message?.includes("INVITEE_ALREADY_HAS_SEAT")) return "One of those emails already has a seat or invitation. Choose different addresses.";

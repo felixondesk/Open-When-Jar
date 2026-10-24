@@ -23,6 +23,10 @@ Signing in is not enough by itself: the verified account must have `app_metadata
 
 ## Completed
 
+### Promo codes (24 October, migration applied)
+
+- `/admin/promos` lists codes with name, code, discount %, valid-till date (UTC), status, and used/cap. Admins can create codes and edit everything except the code itself. The page goes through the AAL2-gated, audit-logged `admin_list_promo_codes` and `admin_upsert_promo_code` RPCs. Migration `add_promo_codes` is applied to the `openwhenjar` project. The rolled-back SQL test passed, covering MFA denial, duplicate codes, the 15% → 679 price, single use per account, the cap, and expired and inactive codes.
+
 ### Administrator authentication
 
 - Added an editable email field to `/admin`.

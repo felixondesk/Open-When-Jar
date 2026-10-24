@@ -592,12 +592,35 @@ export type Database = {
           p_invite_emails: string[]
           p_plan_code: string | null
           p_purchase_type: string
+          p_promo_code?: string | null
         }
         Returns: {
           expected_amount_minor: number
           intent_id: string
           product_id: string
+          list_amount_minor: number
+          percent_off: number | null
         }[]
+      }
+      check_promo_code: {
+        Args: { p_code: string }
+        Returns: number
+      }
+      admin_list_promo_codes: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
+      }
+      admin_upsert_promo_code: {
+        Args: {
+          p_id: string | null
+          p_name: string
+          p_code: string
+          p_percent_off: number
+          p_valid_until: string
+          p_status: string
+          p_max_redemptions: number
+        }
+        Returns: string
       }
       fail_dodo_test_payment_intent: {
         Args: { p_intent_id: string }
