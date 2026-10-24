@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getAdminAccess } from "@/lib/admin";
 
@@ -36,5 +37,6 @@ export async function savePromoCodeAction(_previous: PromoCodeState, formData: F
   });
   if (error) return { error: error.message.includes("PROMO_CODE_TAKEN") ? "That code already exists." : "The promo code could not be saved. Please try again." };
   revalidatePath("/admin/promos");
-  return { success: id ? "Promo code updated." : `Promo code ${code} created.` };
+  if (id) redirect("/admin/promos");
+  return { success: `${code} created.` };
 }
