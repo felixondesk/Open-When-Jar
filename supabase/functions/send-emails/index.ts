@@ -9,6 +9,22 @@ const messages: Record<string, (payload: Record<string, string>, site: string) =
     subject: `${payload.creator} sent you a jar`,
     text: `${payload.creator} sent you a jar on Open When Jar. Sign in with this email address to open it: ${site}/app/jars/${payload.jar_id}`,
   }),
+  envelope_unlocked: (payload, site) => ({
+    subject: `A letter from ${payload.creator} just opened`,
+    text: `A letter in the jar ${payload.creator} sent you on Open When Jar is ready to read: ${site}/app/jars/${payload.jar_id}`,
+  }),
+  jar_opened: (payload, site) => ({
+    subject: `${payload.recipient} opened your jar`,
+    text: `${payload.recipient} opened the jar you sent on Open When Jar: ${site}/app/jars/${payload.jar_id}`,
+  }),
+  jar_expiry_reminder: (payload, site) => ({
+    subject: "Save your Open When Jar keepsake",
+    text: `A jar you received on Open When Jar will reach the end of its three-year hosting on ${new Date(payload.hosting_ends_at).toLocaleDateString("en-US", { dateStyle: "long", timeZone: "UTC" })}. Sign in and download your keepsake before then: ${site}/app/jars/${payload.jar_id}`,
+  }),
+  welcome: (_payload, site) => ({
+    subject: "Welcome to Open When Jar",
+    text: `Welcome to Open When Jar. Fill a jar with letters, photos and voice notes for someone you love, and they open each one when the moment comes. Start your first jar: ${site}/app`,
+  }),
   jar_hosting_ended: (_payload, site) => ({
     subject: "A jar has reached the end of its hosting",
     text: `A jar on Open When Jar has reached the end of its three-year hosting. Sign in to save anything you want to keep: ${site}/app`,
