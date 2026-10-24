@@ -75,8 +75,8 @@ $$;
 revoke all on function public.check_promo_code(text) from public, anon;
 grant execute on function public.check_promo_code(text) to authenticated;
 
--- Return shape changes, so the old signature is dropped. Also restores the extra Jar product id that
--- 20260923150020 regressed to a value that never matched lib/dodo-payments.ts.
+-- Return shape changes, so the old signature is dropped. Keeps the extra Jar product id from
+-- 20260923121217; replaying local files in filename order would otherwise end on 20260923150020's wrong id.
 drop function public.create_dodo_test_payment_intent(uuid, text, text, text, text[]);
 
 create function public.create_dodo_test_payment_intent(
