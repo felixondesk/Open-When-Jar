@@ -12,7 +12,7 @@ Last reviewed: 26 September 2026
 
 ## Current status
 
-The application is **not ready for a paid production launch**. The Dodo Test Mode migrations and webhook are active in the current Supabase project, and one test payment intent is recorded as succeeded; this is not proof of a complete, independently observed sandbox round trip. The previously documented `@jar_*_test` profiles are absent as of 26 September. Live payments, admin MFA, scheduled expiry emails, content deletion/recovery, production authentication, and full authenticated browser testing remain incomplete.
+The application is **not ready for a paid production launch**. The Dodo Test Mode migrations and webhook are active in the current Supabase project, and one test payment intent is recorded as succeeded; this is not proof of a complete, independently observed sandbox round trip. The previously documented `@jar_*_test` profiles are absent as of 26 September. Live payments, admin MFA, content deletion/recovery, production authentication, and full authenticated browser testing remain incomplete.
 
 Deployed 23 October 2026 to Vercel project `open-when-jar` (team Ingenuity Insights, region sin1) at https://open-when-jar-eight.vercel.app with only the public Supabase vars and `NEXT_PUBLIC_SITE_URL` set. Still to do for that host: **Felix** adds it to the Supabase Auth URL configuration and the Turnstile hostnames, adds the Dodo/Resend server secrets in Vercel, and grants the Vercel GitHub app access to `felixondesk/Open-When-Jar` so pushes deploy automatically. **23 October 2026 check:** pushing `eea0a80` triggered a Vercel deployment, but it landed in a different Vercel team (`chris-b89f`), not the `ingenuity-insights` project behind the production URL, so production was not updated by the push. **Felix:** point the GitHub integration at the `open-when-jar` project in the Ingenuity Insights team (or remove the other team's connection), then redeploy; until then, deploy with `vercel --prod` from the linked folder.
 
@@ -67,6 +67,9 @@ Do not add passwords, API keys, webhook secrets, database passwords, or OAuth cl
 - [x] Server-side 1.5 MB processed-file limit and media-type validation.
 - [x] Desktop notifications for received jars and unlocked letters while the authenticated site is open.
 - [x] Service worker and web-app manifest.
+- [x] 24 October 2026 transactional email: database triggers queue rows in `private.email_outbox`; the `send-emails` Edge Function sends them through Resend every minute. Emails cover: jar received, letter unlocked, recipient opened your jar, 7-day expiry reminder, hosting ended, Circle request/accepted, support received/reply/status (one email when a reply also changes status), password/email changed, welcome (after email confirmation), and new-registration alerts to hello@. Letter text, labels and media never enter an email. Live in production.
+- [x] 24 October 2026 hosting expiry: `expire_jars_batch` runs hourly (deletes letter content at hosting end; earliest jar ends September 2029). Unlock and expiry-reminder emails are queued by `enqueue_scheduled_emails` every 5 minutes. The older `jar-expiry-reminder` Edge Function and `private.jar_expiry_reminders` table are superseded and unused.
+- [ ] **Codex:** Add a worker that deletes Storage objects listed in `private.expired_media_cleanup` before the first jar expires (September 2029).
 
 ### Test accounts
 

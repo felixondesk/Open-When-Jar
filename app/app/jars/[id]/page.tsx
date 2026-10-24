@@ -39,6 +39,8 @@ export default async function JarPage({ params, searchParams }: { params: Promis
     jar.jar_recipients.some((membership) => membership.recipient_id === userId) && envelopeIds.length ? supabase.from("recipient_envelope_state").select("envelope_id, favourite, opened_at").eq("recipient_id", userId).in("envelope_id", envelopeIds) : Promise.resolve({ data: [] }),
     envelopeIds.length ? supabase.from("attachments").select("id, envelope_id, kind, mime_type, byte_size").in("envelope_id", envelopeIds) : Promise.resolve({ data: [] }),
   ]);
+  // Marks readable letters as seen; the first insert emails the creator that the jar was opened.
+  if (isRecipient && contents?.length) await supabase.from("recipient_envelope_state").upsert(contents.map((content) => ({ recipient_id: userId, envelope_id: content.envelope_id, opened_at: new Date().toISOString() })), { onConflict: "recipient_id,envelope_id", ignoreDuplicates: true });
   const contentByEnvelope = new Map((contents ?? []).map((content) => [content.envelope_id, content]));
   const stateByEnvelope = new Map((states ?? []).map((state) => [state.envelope_id, state]));
   const attachmentsByEnvelope = new Map<string, AttachmentItem[]>();
