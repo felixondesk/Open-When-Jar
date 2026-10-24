@@ -1149,8 +1149,48 @@ button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visib
 .payment-card__invites label { display: grid; gap: 5px; color: var(--muted); font-size: .72rem; }
 .payment-card__invites input { width: 100%; min-height: 44px; padding: 10px 12px; border: 1px solid #e6dce3; border-radius: 10px; background: #fff; color: var(--ink); font: inherit; }
 .payment-card__add-invite { justify-self: start; padding: 6px 0; color: var(--mulberry); font: 650 .8rem var(--sans); text-align: left; }
-.admin-promo-form { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; align-items: end; }
-.admin-promo-form > p { grid-column: 1 / -1; margin: 0; }
+.admin-promos-page { display: grid; gap: 18px; align-content: start; }
+.admin-promos-page > header h1 { margin-bottom: 4px; }
+.admin-promos-page > header p { margin: 0; }
+.admin-promos-page .admin-panel { background: #fff; }
+.admin-promos-page .admin-metrics { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.promo-voucher { display: inline-block; padding: 4px 10px; border: 1.5px dashed color-mix(in srgb, var(--mulberry) 55%, white); border-radius: 7px; background: var(--paper-deep); color: var(--mulberry); font: 700 .78rem/1.2 var(--sans); letter-spacing: .06em; vertical-align: middle; }
+.admin-panel__heading h2 .promo-voucher { margin-left: 6px; font-size: .9rem; }
+.admin-promo-form { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px 18px; padding: 6px 20px 20px; }
+.admin-promo-form label { display: grid; gap: 6px; align-content: start; color: var(--ink); font-size: .78rem; font-weight: 600; }
+.admin-promo-form small { color: var(--muted); font-size: .68rem; font-weight: 400; }
+.admin-promo-form__name { grid-column: span 2; }
+.admin-promo-form input:not([type="radio"]):not([type="hidden"]) { width: 100%; min-height: 44px; padding: 10px 12px; border: 1px solid var(--border); border-radius: 10px; background: #fff; color: var(--ink); font: 400 .9rem var(--sans); }
+.admin-promo-form input:focus-visible { outline: 2px solid var(--mulberry); outline-offset: 1px; border-color: transparent; }
+.admin-promo-form input::placeholder { color: #b3a9b6; }
+.admin-promo-form .admin-promo-form__code { text-transform: uppercase; letter-spacing: .06em; font-weight: 600; }
+.admin-promo-form__suffix { display: flex; align-items: center; gap: 8px; color: var(--muted); font: 600 1rem var(--serif); }
+.admin-promo-form__status { min-width: 0; margin: 0; padding: 0; border: 0; }
+.admin-promo-form__status legend { margin-bottom: 6px; padding: 0; color: var(--ink); font-size: .78rem; font-weight: 600; }
+.admin-promo-form__status > div { display: flex; gap: 6px; }
+.admin-promo-form__status label { position: relative; display: block; padding: 11px 16px; border: 1px solid var(--border); border-radius: 999px; background: #fff; color: var(--muted); font-weight: 500; cursor: pointer; }
+.admin-promo-form__status input { position: absolute; opacity: 0; inset: 0; cursor: pointer; }
+.admin-promo-form__status label:has(input:checked) { border-color: var(--mulberry); background: var(--mulberry); color: #fff; }
+.admin-promo-form__status label:has(input:focus-visible) { outline: 2px solid var(--mulberry); outline-offset: 2px; }
+.admin-promo-form__footer { grid-column: 1 / -1; display: flex; align-items: center; justify-content: space-between; gap: 16px; padding-top: 16px; border-top: 1px solid var(--border); }
+.admin-promo-form__footer p { margin: 0; font-size: .8rem; }
+.admin-promo-form__saved { color: var(--leaf); font-weight: 600; }
+.admin-promo-form__footer .button { min-width: 160px; min-height: 46px; font-size: .9rem; }
+.admin-promo-table td small { display: block; margin-top: 5px; color: var(--muted); font-size: .68rem; }
+.admin-promo-table tbody tr[aria-current] { background: #fff3f8; box-shadow: inset 3px 0 0 var(--mulberry); }
+.admin-promo-percent { color: var(--mulberry); font: 600 1.25rem/1 var(--serif); }
+.admin-promo-usage { display: inline-flex; align-items: center; gap: 10px; }
+.admin-promo-usage meter { width: 84px; height: 6px; }
+.admin-promo-usage meter::-webkit-meter-bar { border: 0; border-radius: 99px; background: #f0e4ed; }
+.admin-promo-usage meter::-webkit-meter-optimum-value { border-radius: 99px; background: var(--mulberry); }
+.admin-promo-usage meter::-moz-meter-bar { border-radius: 99px; background: var(--mulberry); }
+.admin-promo-empty { margin: 0; padding: 44px 20px; border-top: 1px solid var(--border); color: var(--muted); text-align: center; }
+.admin-status--active { color: var(--leaf); background: #e6f1eb; }
+.admin-status--inactive { color: var(--muted); background: #f1edf1; }
+.admin-status--expired { color: #9d6503; background: #fcf0d9; }
+.admin-status--used_up { color: #a8494c; background: #fbe5e6; }
+@media (max-width: 900px) { .admin-promos-page .admin-metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); } .admin-promo-form { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 560px) { .admin-promo-form { grid-template-columns: 1fr; padding-inline: 14px; } .admin-promo-form__name { grid-column: auto; } .admin-promo-form__footer { flex-direction: column-reverse; align-items: stretch; } }
 .payment-card__promo { display: grid; gap: 6px; margin-top: 20px; color: var(--muted); font-size: .72rem; }
 .payment-card__promo > div { display: flex; gap: 8px; }
 .payment-card__promo input { flex: 1; min-width: 0; min-height: 44px; padding: 10px 12px; border: 1px solid #e6dce3; border-radius: 10px; background: #fff; color: var(--ink); font: inherit; text-transform: uppercase; }
