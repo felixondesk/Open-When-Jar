@@ -1,9 +1,6 @@
 [functions.dodo-test-webhook]
 verify_jwt = false
 
-[functions.jar-expiry-reminder]
-verify_jwt = false
-
 [functions.send-emails]
 verify_jwt = false
 
