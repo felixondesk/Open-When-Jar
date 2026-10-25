@@ -8,6 +8,7 @@ import {
   getDodoCheckoutHost,
   getDodoClient,
   getDodoMode,
+  logDodoCheckoutError,
 } from "@/lib/dodo-payments";
 import { getSeatInvitationEmailConfig } from "@/lib/seat-invitation-email";
 import { createClient } from "@/lib/supabase/server";
@@ -112,6 +113,7 @@ export async function startPlanCheckoutAction(
     }
     checkoutUrl = parsedUrl.toString();
   } catch (error) {
+    logDodoCheckoutError(error);
     await markCheckoutFailed(supabase, intentId);
     if (error instanceof Error && error.message === "DODO_PRODUCT_PRICE_MISMATCH") {
       return { error: "The Dodo product price or currency does not match the price shown here. Check the product and adaptive pricing settings." };
@@ -185,6 +187,7 @@ export async function startExtraJarCheckoutAction(formData: FormData): Promise<v
     }
     checkoutUrl = parsedUrl.toString();
   } catch (error) {
+    logDodoCheckoutError(error);
     await markCheckoutFailed(supabase, intentId);
     if (error instanceof Error && error.message === "DODO_PRODUCT_PRICE_MISMATCH") {
       redirect(accountCheckoutError("The Dodo price or currency does not match the price shown. Check the product and adaptive pricing settings."));

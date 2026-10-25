@@ -19,6 +19,12 @@ export function getDodoClient() {
   return new DodoPayments({ bearerToken: apiKey, environment: mode });
 }
 
+// Logs only the status and message Dodo returns; request headers (the API key) are never included.
+export function logDodoCheckoutError(error: unknown) {
+  const status = error instanceof DodoPayments.APIError ? error.status : undefined;
+  console.error("[dodo-checkout]", getDodoMode(), status ?? "", error instanceof Error ? error.message : "unknown error");
+}
+
 export function getDodoCheckoutHost() {
   return getDodoMode() === "live_mode" ? "checkout.dodopayments.com" : "test.checkout.dodopayments.com";
 }
