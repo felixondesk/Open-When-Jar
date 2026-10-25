@@ -20,6 +20,7 @@ NEXT_PUBLIC_SITE_URL=http://localhost:3127
 RESEND_API_KEY=...
 INVITATION_FROM_EMAIL=Open When Jar <hello@your-verified-domain.example>
 DODO_PAYMENTS_TEST_API_KEY=...
+# Production only: DODO_PAYMENTS_MODE=live_mode and DODO_PAYMENTS_API_KEY=<live key>
 ```
 
 Database credentials are not used by the browser or Next.js application.
@@ -44,12 +45,12 @@ The Resend key stays server-side. During local development, `Open When Jar <onbo
 
 Authentication, profiles, jar credits, text letters, date locks, favourites, and sent/received shelves use the configured Supabase project. The SQL source of truth is `supabase/schema.sql`.
 
-The plan screen uses Dodo Payments Test Mode only. A signed `payment.succeeded` webhook delivered to `supabase/functions/dodo-test-webhook` grants a non-billable test plan or extra Jar after confirming its product, currency, and amount. The checkout session is created on the server; access is never granted from the browser return URL. The migration is local and has not been applied to Supabase, and the Edge Function has not been deployed or connected to a Dodo webhook yet.
+The plan screen runs in Dodo Test Mode by default. A signed `payment.succeeded` webhook delivered to `supabase/functions/dodo-test-webhook` grants a plan or extra Jar after confirming its product, currency, amount, and mode; `refund.succeeded`, `dispute.accepted`, and `dispute.lost` take unused entitlements back and mark the payment refunded, while partial refunds and anything already used are left as `needs_review` for an admin. The checkout session is created on the server; access is never granted from the browser return URL.
 
-Add the Dodo Test Mode API key to the server-side environment as `DODO_PAYMENTS_TEST_API_KEY`. Deploy the migration and Edge Function before registering the webhook endpoint `https://<project-ref>.supabase.co/functions/v1/dodo-test-webhook`; select `payment.succeeded` and set `DODO_PAYMENTS_TEST_WEBHOOK_KEY` as a Supabase Function secret. The function gets its request-scoped admin client from `@supabase/server`; no database secret is added to the Next.js app. If group plans are purchased, also configure the Resend invitation secrets for the function so reserved seats are emailed.
+Test Mode uses `DODO_PAYMENTS_TEST_API_KEY` (app) and `DODO_PAYMENTS_TEST_WEBHOOK_KEY` (function secret). To go live, set `DODO_PAYMENTS_MODE=live_mode` on both, `DODO_PAYMENTS_API_KEY` on the app, and `DODO_PAYMENTS_WEBHOOK_KEY` on the function; one mode is active at a time. Dodo catalog IDs are stored per mode in `public.dodo_products`, so create the same six products in the live dashboard and insert their `live_mode` rows before live checkout works. Register the webhook endpoint `https://<project-ref>.supabase.co/functions/v1/dodo-test-webhook` in the matching Dodo dashboard with the four events above. The function gets its request-scoped admin client from `@supabase/server`; no database secret is added to the Next.js app. If group plans are purchased, also configure the Resend invitation secrets for the function so reserved seats are emailed.
 
 `NEXT_PUBLIC_SITE_URL` is the app URL Dodo returns customers to after checkout. The local `.env.local` uses `http://localhost:3127`; before production, set it to the permanent public app URL. This is separate from Dodo’s merchant website field, which is part of merchant onboarding and is not needed to use Test Mode. Set `DODO_TEST_CHECKOUT_ENABLED=true` only in a production-hosted test deployment; local development does not need this flag.
 
-No live-mode client, live API key, or paid fulfillment path is included. Merchant approval, live webhook/refund handling, reconciliation, recovery, backups, deletion/export, malware scanning, and operational support remain follow-up work before a paid launch. Always-on web push when the site is closed requires a VAPID-backed push service and scheduled delivery; the current desktop alerts poll only while the authenticated site is open.
+Merchant approval, a real live checkout and refund rehearsal, reconciliation against Dodo's payment list, recovery tooling for `needs_review` payments, backups, deletion/export, malware scanning, and operational support remain follow-up work before a paid launch. Always-on web push when the site is closed requires a VAPID-backed push service and scheduled delivery; the current desktop alerts poll only while the authenticated site is open.
 
 For a fresh database, apply `supabase/schema.sql` followed by the migrations in `supabase/migrations/` in filename order.

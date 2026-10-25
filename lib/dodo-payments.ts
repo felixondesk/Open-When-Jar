@@ -1,28 +1,26 @@
 import "server-only";
 import DodoPayments from "dodopayments";
-import type { JarPlanCode } from "@/lib/plans";
 
-const DODO_TEST_PRODUCTS: Record<JarPlanCode | "extra_jar", string> = {
-  one_heart: "pdt_0NoD2B2hHk4o2flDTLCHu",
-  two_hearts: "pdt_0NoD2uXbJCmqczV0EoE7Z",
-  close_circle: "pdt_0NoD38hZE7pJyn2jdOneN",
-  family_circle: "pdt_0NoD3KvIxN5Xx4sFVP7rQ",
-  big_heart: "pdt_0NoD3TOCNAxFB90JxKnyQ",
-  extra_jar: "pdt_0NoD3bz3qRPPvVDlx49zW",
-};
+export type DodoMode = "test_mode" | "live_mode";
 
-export function getDodoTestProductId(code: JarPlanCode | "extra_jar") {
-  return DODO_TEST_PRODUCTS[code];
+export function getDodoMode(): DodoMode {
+  return process.env.DODO_PAYMENTS_MODE?.trim() === "live_mode" ? "live_mode" : "test_mode";
 }
 
-export function getDodoTestClient() {
-  const apiKey = process.env.DODO_PAYMENTS_TEST_API_KEY?.trim();
-  if (!apiKey) throw new Error("DODO_TEST_API_KEY_MISSING");
-  if (process.env.NODE_ENV === "production" && process.env.DODO_TEST_CHECKOUT_ENABLED !== "true") {
+export function getDodoClient() {
+  const mode = getDodoMode();
+  const apiKey = (process.env.DODO_PAYMENTS_API_KEY ?? (mode === "test_mode" ? process.env.DODO_PAYMENTS_TEST_API_KEY : undefined))?.trim();
+  if (!apiKey) throw new Error("DODO_API_KEY_MISSING");
+  // A production host never runs sandbox checkouts unless explicitly enabled for a hosted test deployment.
+  if (mode === "test_mode" && process.env.NODE_ENV === "production" && process.env.DODO_TEST_CHECKOUT_ENABLED !== "true") {
     throw new Error("DODO_TEST_CHECKOUT_DISABLED");
   }
 
-  return new DodoPayments({ bearerToken: apiKey, environment: "test_mode" });
+  return new DodoPayments({ bearerToken: apiKey, environment: mode });
+}
+
+export function getDodoCheckoutHost() {
+  return getDodoMode() === "live_mode" ? "checkout.dodopayments.com" : "test.checkout.dodopayments.com";
 }
 
 export function getCheckoutCurrency(market: string): "USD" | "INR" | null {

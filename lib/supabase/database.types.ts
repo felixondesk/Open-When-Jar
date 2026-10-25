@@ -593,6 +593,7 @@ export type Database = {
           p_plan_code: string | null
           p_purchase_type: string
           p_promo_code?: string | null
+          p_mode?: string
         }
         Returns: {
           expected_amount_minor: number
@@ -635,6 +636,17 @@ export type Database = {
           p_product_id: string
           p_tax: number
           p_total_amount: number
+          p_mode: string
+        }
+        Returns: Json
+      }
+      revoke_dodo_payment: {
+        Args: {
+          p_event_id: string
+          p_event_type: string
+          p_payment_id: string
+          p_mode: string
+          p_partial?: boolean
         }
         Returns: Json
       }

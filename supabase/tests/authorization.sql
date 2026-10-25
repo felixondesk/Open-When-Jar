@@ -126,7 +126,7 @@ begin
     raise exception 'FAIL: anonymous privileged RPC access';
   end if;
   if has_function_privilege('authenticated','public.fulfill_dodo_test_payment(text,uuid,text,text,text,integer,integer)','execute')
-    or has_function_privilege('authenticated','public.claim_jar_expiry_reminders(integer)','execute') then
+    or has_function_privilege('authenticated','public.expire_jars_batch(integer)','execute') then
     raise exception 'FAIL: service-only RPC exposed';
   end if;
 end;

@@ -5,8 +5,9 @@ import { JAR_PLANS } from "@/lib/plans";
 import {
   getCheckoutCurrency,
   getCheckoutSiteOrigin,
-  getDodoTestClient,
-  getDodoTestProductId,
+  getDodoCheckoutHost,
+  getDodoClient,
+  getDodoMode,
 } from "@/lib/dodo-payments";
 import { getSeatInvitationEmailConfig } from "@/lib/seat-invitation-email";
 import { createClient } from "@/lib/supabase/server";
@@ -56,13 +57,10 @@ export async function startPlanCheckoutAction(
     p_currency: currency,
     p_invite_emails: inviteEmails,
     p_promo_code: promoCode || null,
+    p_mode: getDodoMode(),
   });
   if (intentError || !intentRows?.length) return { error: checkoutIntentError(intentError?.message) };
   const productId = intentRows[0].product_id;
-  if (productId !== getDodoTestProductId(plan.code)) {
-    await markCheckoutFailed(supabase, intentId);
-    return { error: "The sandbox product mapping is out of date. Please contact support." };
-  }
 
   const origin = getCheckoutSiteOrigin();
   if (!origin) {
@@ -72,7 +70,7 @@ export async function startPlanCheckoutAction(
 
   let checkoutUrl: string;
   try {
-    const dodo = getDodoTestClient();
+    const dodo = getDodoClient();
     const { list_amount_minor: listAmount, expected_amount_minor: expectedAmount, percent_off: percentOff } = intentRows[0];
     const productCart = [{ product_id: productId, quantity: 1 }];
     // A single-use Dodo discount mirrors the DB-validated promo; users can never type codes into Dodo directly.
@@ -109,16 +107,16 @@ export async function startPlanCheckoutAction(
     });
     if (!session.checkout_url) throw new Error("CHECKOUT_URL_MISSING");
     const parsedUrl = new URL(session.checkout_url);
-    if (parsedUrl.protocol !== "https:" || parsedUrl.hostname !== "test.checkout.dodopayments.com") {
+    if (parsedUrl.protocol !== "https:" || parsedUrl.hostname !== getDodoCheckoutHost()) {
       throw new Error("CHECKOUT_URL_INVALID");
     }
     checkoutUrl = parsedUrl.toString();
   } catch (error) {
     await markCheckoutFailed(supabase, intentId);
     if (error instanceof Error && error.message === "DODO_PRODUCT_PRICE_MISMATCH") {
-      return { error: "The Dodo Test Mode product price or currency does not match the price shown here. Check the product and adaptive pricing settings." };
+      return { error: "The Dodo product price or currency does not match the price shown here. Check the product and adaptive pricing settings." };
     }
-    return { error: "We couldn’t start Dodo’s sandbox checkout. Check the test API key and product setup, then try again." };
+    return { error: "We couldn’t start Dodo checkout. Check the API key and product setup, then try again." };
   }
 
   redirect(checkoutUrl);
@@ -143,14 +141,11 @@ export async function startExtraJarCheckoutAction(formData: FormData): Promise<v
     p_plan_code: null,
     p_currency: currency,
     p_invite_emails: [],
+    p_mode: getDodoMode(),
   });
   if (intentError || !intentRows?.length) {
     if (intentError?.message.includes("PLAN_REQUIRED")) redirect("/app/unlock");
     redirect(accountCheckoutError("We couldn’t prepare this checkout. Please refresh and try again."));
-  }
-  if (intentRows[0].product_id !== getDodoTestProductId("extra_jar")) {
-    await markCheckoutFailed(supabase, intentId);
-    redirect(accountCheckoutError("The sandbox product mapping is out of date. Please contact support."));
   }
   const origin = getCheckoutSiteOrigin();
   if (!origin) {
@@ -160,7 +155,7 @@ export async function startExtraJarCheckoutAction(formData: FormData): Promise<v
 
   let checkoutUrl: string;
   try {
-    const dodo = getDodoTestClient();
+    const dodo = getDodoClient();
     const productId = intentRows[0].product_id;
     const productCart = [{ product_id: productId, quantity: 1 }];
     const preview = await dodo.checkoutSessions.preview({ product_cart: productCart, billing_currency: currency });
@@ -185,16 +180,16 @@ export async function startExtraJarCheckoutAction(formData: FormData): Promise<v
     });
     if (!session.checkout_url) throw new Error("CHECKOUT_URL_MISSING");
     const parsedUrl = new URL(session.checkout_url);
-    if (parsedUrl.protocol !== "https:" || parsedUrl.hostname !== "test.checkout.dodopayments.com") {
+    if (parsedUrl.protocol !== "https:" || parsedUrl.hostname !== getDodoCheckoutHost()) {
       throw new Error("CHECKOUT_URL_INVALID");
     }
     checkoutUrl = parsedUrl.toString();
   } catch (error) {
     await markCheckoutFailed(supabase, intentId);
     if (error instanceof Error && error.message === "DODO_PRODUCT_PRICE_MISMATCH") {
-      redirect(accountCheckoutError("The Dodo Test Mode price or currency does not match the price shown. Check the product and adaptive pricing settings."));
+      redirect(accountCheckoutError("The Dodo price or currency does not match the price shown. Check the product and adaptive pricing settings."));
     }
-    redirect(accountCheckoutError("We couldn’t start Dodo’s sandbox checkout. Check the test API key and product setup, then try again."));
+    redirect(accountCheckoutError("We couldn’t start Dodo checkout. Check the API key and product setup, then try again."));
   }
 
   redirect(checkoutUrl);
@@ -244,6 +239,7 @@ async function markCheckoutFailed(supabase: Awaited<ReturnType<typeof createClie
 
 function checkoutIntentError(message?: string) {
   if (message?.includes("PROMO_")) return promoErrorMessage(message);
+  if (message?.includes("PRODUCT_NOT_CONFIGURED")) return "Checkout isn’t available yet for this product. Please contact support.";
   if (message?.includes("PLAN_ALREADY_ACTIVE")) return "Your account already has a plan.";
   if (message?.includes("CHECKOUT_ALREADY_PENDING")) return "A plan checkout is already open. Finish or close it before trying again.";
   if (message?.includes("INVITEE_ALREADY_HAS_SEAT")) return "One of those emails already has a seat or invitation. Choose different addresses.";

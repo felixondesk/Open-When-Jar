@@ -118,6 +118,15 @@ export default {
       if (messageId && !finishError) sent++;
       else failed++;
     }
-    return Response.json({ claimed: rows.length, sent, failed }, { headers: { "Cache-Control": "no-store" } });
+
+    // Expired jars queue their media paths; remove the objects, then the queue rows.
+    let mediaRemoved = 0;
+    const { data: expired } = await ctx.supabaseAdmin.rpc("list_expired_media", { p_limit: 100 });
+    const paths = ((expired ?? []) as { storage_path: string }[]).map((item) => item.storage_path);
+    if (paths.length) {
+      const { error: removeError } = await ctx.supabaseAdmin.storage.from("jar-media").remove(paths);
+      if (!removeError && !(await ctx.supabaseAdmin.rpc("finish_expired_media", { p_paths: paths })).error) mediaRemoved = paths.length;
+    }
+    return Response.json({ claimed: rows.length, sent, failed, mediaRemoved }, { headers: { "Cache-Control": "no-store" } });
   }),
 };
