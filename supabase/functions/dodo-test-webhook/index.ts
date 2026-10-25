@@ -2,11 +2,16 @@ import DodoPayments from "npm:dodopayments@2.51.0";
 import { readWebhookBody } from "./body.ts";
 import { withSupabase } from "npm:@supabase/server@^1";
 
-const webhookKey = Deno.env.get("DODO_PAYMENTS_TEST_WEBHOOK_KEY")?.trim();
+const mode = Deno.env.get("DODO_PAYMENTS_MODE")?.trim() === "live_mode" ? "live_mode" : "test_mode";
+const webhookKey = (Deno.env.get("DODO_PAYMENTS_WEBHOOK_KEY")
+  ?? (mode === "test_mode" ? Deno.env.get("DODO_PAYMENTS_TEST_WEBHOOK_KEY") : undefined))?.trim();
 
 const dodo = webhookKey
-  ? new DodoPayments({ bearerToken: "", environment: "test_mode", webhookKey })
+  ? new DodoPayments({ bearerToken: "", environment: mode, webhookKey })
   : null;
+
+// Full refunds and lost/accepted disputes take the entitlement back; other events are acknowledged and ignored.
+const REVOKING_EVENTS = new Set(["refund.succeeded", "dispute.accepted", "dispute.lost"]);
 
 export default {
   fetch: withSupabase({ auth: "none" }, async (request, ctx) => {
@@ -35,6 +40,23 @@ export default {
       return jsonResponse({ error: "Invalid webhook signature" }, 401);
     }
 
+    if (REVOKING_EVENTS.has(event.type)) {
+      const refund = event.data as { payment_id?: unknown; is_partial?: unknown };
+      if (typeof refund.payment_id !== "string") return jsonResponse({ error: "Refund data is incomplete" }, 400);
+      const { data, error } = await ctx.supabaseAdmin.rpc("revoke_dodo_payment", {
+        p_event_id: webhookId,
+        p_event_type: event.type,
+        p_payment_id: refund.payment_id,
+        p_mode: mode,
+        p_partial: refund.is_partial === true,
+      });
+      if (error) {
+        console.error("[dodo-test-webhook] Refund revocation failed");
+        return jsonResponse({ error: "Refund could not be recorded" }, 500);
+      }
+      return jsonResponse({ received: true, status: (data as { status?: string } | null)?.status ?? "ignored" });
+    }
+
     if (event.type !== "payment.succeeded") return jsonResponse({ received: true, ignored: true });
 
     const payment = event.data;
@@ -59,6 +81,7 @@ export default {
       p_currency: payment.currency,
       p_total_amount: payment.total_amount,
       p_tax: tax,
+      p_mode: mode,
     });
 
     if (error) {
