@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { UnlockExperience } from "@/components/UnlockExperience";
 import { getPlanStatusOrClaimInvitation } from "@/lib/plan-status";
+import { getDodoMode } from "@/lib/dodo-payments";
 
 export const metadata = { title: "Choose a plan — Open When Jar", robots: { index: false, follow: false } };
 
@@ -21,12 +22,12 @@ export default async function UnlockPage({ searchParams }: { searchParams: Promi
   const checkoutNotice = params.checkout === "returned"
     ? "Dodo returned you to Open When Jar. We’re waiting for its signed confirmation; refresh in a moment if your plan has not appeared."
     : params.checkout === "cancelled"
-      ? "Checkout was cancelled. No test plan was activated."
+      ? "Checkout was cancelled. No plan was activated."
       : undefined;
 
   return (
     <main className="unlock-shell unlock-shell--v2">
-      <UnlockExperience checkoutNotice={checkoutNotice} />
+      <UnlockExperience checkoutNotice={checkoutNotice} liveMode={getDodoMode() === "live_mode"} />
     </main>
   );
 }

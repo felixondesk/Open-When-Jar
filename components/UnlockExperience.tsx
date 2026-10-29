@@ -7,7 +7,7 @@ import { checkPromoCodeAction, startPlanCheckoutAction } from "@/app/app/unlock/
 import { EXTRA_JAR_PRICE, formatMarketPrice, getJarPlan, JAR_PLANS, type JarPlanCode, type PricingMarket } from "@/lib/plans";
 import { Button } from "./ui";
 
-export function UnlockExperience({ checkoutNotice }: { checkoutNotice?: string }) {
+export function UnlockExperience({ checkoutNotice, liveMode }: { checkoutNotice?: string; liveMode: boolean }) {
   const [planCode, setPlanCode] = useState<JarPlanCode>("one_heart");
   const [market, setMarket] = useState<PricingMarket>("global");
   const [inviteFieldCount, setInviteFieldCount] = useState(0);
@@ -62,7 +62,7 @@ export function UnlockExperience({ checkoutNotice }: { checkoutNotice?: string }
 
           {plan.seatCount > 1 ? <div className="payment-card__invites">
             <strong>Invite people now (optional)</strong>
-            <p>Add anyone you know now, or leave seats open and invite people later from Account. After the sandbox payment is confirmed, we’ll email anyone listed here.</p>
+            <p>Add anyone you know now, or leave seats open and invite people later from Account. After the payment is confirmed, we’ll email anyone listed here.</p>
             {Array.from({ length: inviteFieldCount }, (_, index) => <label key={index}>
               <span>Member {index + 2} email (optional)</span>
               <input autoComplete="email" name="inviteEmails" placeholder="name@example.com" type="email" />
@@ -84,9 +84,11 @@ export function UnlockExperience({ checkoutNotice }: { checkoutNotice?: string }
           <div className="payment-card__total"><span>{appliedPercent ? `One-time price with ${appliedPercent}% off` : "Listed one-time price"}</span><strong>{appliedPercent ? <><s>{formatMarketPrice(plan, market)}</s> {formatMarketPrice({ amountCents: discounted(plan.amountCents), amountInrPaise: discounted(plan.amountInrPaise) }, market)}</> : formatMarketPrice(plan, market)}</strong><small>Tax is added at checkout. No recurring charge.</small></div>
           <p className="pricing-note">Each seat can buy extra Jars for {formatMarketPrice(EXTRA_JAR_PRICE, market)} each. Extra Jars belong to that seat. Unused Jars do not expire while the account is active.</p>
 
-          <Button className="payment-card__cta" disabled={checkoutPending} type="submit">{checkoutPending ? "Opening checkout…" : "Continue to test checkout"} <span aria-hidden="true">→</span></Button>
+          <Button className="payment-card__cta" disabled={checkoutPending} type="submit">{checkoutPending ? "Opening checkout…" : liveMode ? "Continue to secure checkout" : "Continue to test checkout"} <span aria-hidden="true">→</span></Button>
           <p className="checkout-boundary" role="note">
-            Dodo sandbox checkout only. No real payment is collected. Access is added after Dodo confirms the test payment.
+            {liveMode
+              ? "Payment is handled securely by Dodo Payments. Access is added as soon as Dodo confirms your payment."
+              : "Dodo sandbox checkout only. No real payment is collected. Access is added after Dodo confirms the test payment."}
           </p>
           {checkoutNotice ? <p className="dashboard-notice" role="status">{checkoutNotice}</p> : null}
           {checkoutState.error ? <p className="field-error" role="alert">{checkoutState.error}</p> : null}
