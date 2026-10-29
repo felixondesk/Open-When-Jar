@@ -1,7 +1,14 @@
 import "server-only";
 import DodoPayments from "dodopayments";
+import { headers } from "next/headers";
+import type { PricingMarket } from "./plans";
 
 export type DodoMode = "test_mode" | "live_mode";
+
+// Vercel sets this from the visitor's IP; it is absent locally, which falls back to USD.
+export async function getDefaultMarket(): Promise<PricingMarket> {
+  return (await headers()).get("x-vercel-ip-country") === "IN" ? "india" : "global";
+}
 
 export function getDodoMode(): DodoMode {
   return process.env.DODO_PAYMENTS_MODE?.trim() === "live_mode" ? "live_mode" : "test_mode";

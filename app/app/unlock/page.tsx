@@ -2,7 +2,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { UnlockExperience } from "@/components/UnlockExperience";
 import { getPlanStatusOrClaimInvitation } from "@/lib/plan-status";
-import { getDodoMode } from "@/lib/dodo-payments";
+import { getDefaultMarket, getDodoMode } from "@/lib/dodo-payments";
 
 export const metadata = { title: "Choose a plan — Open When Jar", robots: { index: false, follow: false } };
 
@@ -27,7 +27,7 @@ export default async function UnlockPage({ searchParams }: { searchParams: Promi
 
   return (
     <main className="unlock-shell unlock-shell--v2">
-      <UnlockExperience checkoutNotice={checkoutNotice} liveMode={getDodoMode() === "live_mode"} />
+      <UnlockExperience checkoutNotice={checkoutNotice} liveMode={getDodoMode() === "live_mode"} defaultMarket={await getDefaultMarket()} />
     </main>
   );
 }

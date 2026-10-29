@@ -7,9 +7,9 @@ import { checkPromoCodeAction, startPlanCheckoutAction } from "@/app/app/unlock/
 import { EXTRA_JAR_PRICE, formatMarketPrice, getJarPlan, JAR_PLANS, type JarPlanCode, type PricingMarket } from "@/lib/plans";
 import { Button } from "./ui";
 
-export function UnlockExperience({ checkoutNotice, liveMode }: { checkoutNotice?: string; liveMode: boolean }) {
+export function UnlockExperience({ checkoutNotice, liveMode, defaultMarket }: { checkoutNotice?: string; liveMode: boolean; defaultMarket: PricingMarket }) {
   const [planCode, setPlanCode] = useState<JarPlanCode>("one_heart");
-  const [market, setMarket] = useState<PricingMarket>("global");
+  const [market, setMarket] = useState<PricingMarket>(defaultMarket);
   const [inviteFieldCount, setInviteFieldCount] = useState(0);
   const [checkoutState, checkoutAction, checkoutPending] = useActionState(startPlanCheckoutAction, {});
   const [promoState, promoAction, promoPending] = useActionState(checkPromoCodeAction, {});

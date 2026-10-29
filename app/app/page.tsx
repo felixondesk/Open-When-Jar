@@ -15,6 +15,7 @@ import { NavigationLink } from "@/components/NavigationLink";
 import { LogOut } from "@/components/icons";
 import { Brand } from "@/components/ui";
 import { getPlanStatusOrClaimInvitation } from "@/lib/plan-status";
+import { getDefaultMarket, getDodoMode } from "@/lib/dodo-payments";
 import { getJarPlan } from "@/lib/plans";
 import { getSeatInvitationEmailConfig } from "@/lib/seat-invitation-email";
 import { createClient } from "@/lib/supabase/server";
@@ -201,7 +202,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
               <h2 id="account-jars-heading">Your Jars</h2>
               <p className="account-card__feature">{jarsRemaining} <small>remaining</small></p>
               <p>{plan.jarsUsed} used of {plan.jarLimit} available to your account.</p>
-              <ExtraJarPurchaseForm />
+              <ExtraJarPurchaseForm defaultMarket={await getDefaultMarket()} liveMode={getDodoMode() === "live_mode"} />
             </section>
             <section className="account-card account-card--danger" aria-labelledby="account-delete-heading">
               <h2 id="account-delete-heading">Delete account</h2>
