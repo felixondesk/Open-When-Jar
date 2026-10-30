@@ -39,7 +39,7 @@ export default function PrivacyPage() {
         <h2>3. Who can see your information</h2>
         <p>Your username and display name can be shown to other signed-in users where needed for Circle requests, invitations, and Jar delivery. A Jar is available only to its creator and its authorised recipients, subject to its state and unlock date.</p>
         <p>A plan owner can see the email addresses they entered for unclaimed seat invitations. Other plan members do not receive that invitation list.</p>
-        <p>The operator uses a separate admin portal, protected by multi-factor authentication, to run the service. It shows account and Jar metadata such as usernames, plan status, dates, and the text of support requests. It never shows letter text, photos, voice notes, or email addresses.</p>
+        <p>The operator uses a separate admin portal, protected by multi-factor authentication, to run the service. It shows account and Jar metadata such as usernames, account email addresses, plan status, dates, and the text of support requests. It never shows letter text, photos, or voice notes.</p>
         <p>Authorised recipients may save, screenshot, record, or otherwise copy content they can access. Copies made by another person cannot be remotely erased by Open When Jar.</p>
       </section>
 
@@ -48,7 +48,7 @@ export default function PrivacyPage() {
         <p>We share information only with the providers needed to run the service:</p>
         <ul>
           <li><strong>Supabase</strong> provides authentication, the database, and private file storage. Project data is stored in Singapore.</li>
-          <li><strong>Vercel</strong> hosts the application, with server functions running in Singapore.</li>
+          <li><strong>Vercel</strong> hosts the application, with server functions running in Singapore. Vercel Web Analytics counts page views (page path without query strings, referrer, country, browser, operating system, and device type) to show aggregate traffic. It sets no cookies and identifies visits with a hash that resets daily.</li>
           <li><strong>Cloudflare Turnstile</strong> protects the sign-in, sign-up, and admin login forms from automated abuse. It processes your IP address and browser signals to decide whether a request is human and may set a cookie inside its challenge frame.</li>
           <li><strong>Google</strong> processes your sign-in information if you choose Google sign-in.</li>
           <li><strong>Resend</strong> delivers our emails: account verification and password links, plan-seat invitations, and hosting-end reminders.</li>
@@ -60,7 +60,7 @@ export default function PrivacyPage() {
       <section>
         <h2>5. Cookies, browser storage, and notifications</h2>
         <p>We use authentication cookies to maintain signed-in sessions. The notification feature stores read and seen notification identifiers and your desktop-alert preference in your browser’s local storage. If your browser supports desktop notifications, the service worker is registered for that feature. Desktop alerts require your separate browser permission and appear while Open When Jar is open; closed-browser Web Push is not enabled. You can turn alerts off in the app or browser settings.</p>
-        <p>We do not use advertising cookies or third-party behavioral analytics, so no cookie consent banner is shown. If we add optional tracking technologies, this notice and any required choice mechanism will be updated first.</p>
+        <p>We do not use advertising cookies or behavioral analytics. Vercel Web Analytics, described above, is cookieless and aggregate, so no cookie consent banner is shown. If we add optional tracking technologies, this notice and any required choice mechanism will be updated first.</p>
       </section>
 
       <section>

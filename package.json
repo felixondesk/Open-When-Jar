@@ -18,6 +18,7 @@
     "@fontsource/fraunces": "^5.3.0",
     "@supabase/ssr": "0.12.7",
     "@supabase/supabase-js": "2.116.0",
+    "@vercel/analytics": "^2.0.1",
     "dodopayments": "2.51.0",
     "next": "16.4.2",
     "react": "^19.3.0",

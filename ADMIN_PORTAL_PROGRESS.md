@@ -51,7 +51,8 @@ Signing in is not enough by itself: the verified account must have `app_metadata
 - Admin authorization uses `app_metadata`, which users cannot edit through normal client APIs.
 - The database RPC independently requires the admin role and AAL2 before its `SECURITY DEFINER` queries run.
 - The RPC is read-only, audited, revoked from `public` and `anon`, and granted only to authenticated users.
-- Letter text, transcripts, private media, recipient emails, provider references, invitation tokens, and payment secrets remain excluded.
+- Letter text, transcripts, private media, provider references, invitation tokens, and payment secrets remain excluded.
+- 2026-10-30: Felix approved showing each account's login email on the People records list (searchable). Emails appear nowhere else in the admin portal.
 
 ## What to configure in Supabase
 
