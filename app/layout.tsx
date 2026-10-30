@@ -5,6 +5,7 @@ import "@fontsource/dm-sans/600.css";
 import "@fontsource/fraunces/600.css";
 import "./globals.css";
 import { siteUrl } from "@/lib/site-url";
+import { VercelAnalytics } from "./VercelAnalytics";
 
 export const metadata: Metadata = {
   metadataBase: siteUrl,
@@ -32,7 +33,7 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="en" data-scroll-behavior="smooth">
-      <body>{children}</body>
+      <body>{children}<VercelAnalytics /></body>
     </html>
   );
 }

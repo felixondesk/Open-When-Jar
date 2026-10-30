@@ -48,6 +48,8 @@ begin
   end if;
   result := public.admin_browse_records('people',null,f.unpaid_id::text);
   if result->>'total' <> '1' or result->'rows'->0->>'plan_code' is not null then raise exception 'FAIL: unpaid account'; end if;
+  result := public.admin_browse_records('people',null,f.unpaid_id::text || '@example.invalid');
+  if result->>'total' <> '1' or result->'rows'->0->>'email' <> f.unpaid_id::text || '@example.invalid' then raise exception 'FAIL: people email'; end if;
   result := public.admin_browse_records('payments','succeeded',f.plan_id::text);
   if result->>'total' <> '26' or jsonb_array_length(result->'rows') <> 25
     or result->'rows'->0->>'paid_amount_minor' <> '100000' then raise exception 'FAIL: payment amounts/pagination'; end if;

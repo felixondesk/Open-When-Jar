@@ -48,7 +48,7 @@ Never add passwords, API keys, webhook secrets, or OAuth secrets to these files,
 - `/app` — dashboard: sent/received shelves, credit balance, new-jar form.
 - `/app/jars/[id]` — jar reader with creator/recipient views. Locked envelopes render no body because RLS keeps `envelope_contents` rows from recipients until the DB-enforced unlock time; the page just checks whether content came back.
 - `/app/unlock` — payment boundary page. Checkout uses server-created hosted Dodo sessions in the configured mode, and a signed webhook handled by `supabase/functions/dodo-test-webhook` grants access (`paid` entitlements in live mode, `test` in test mode) and revokes unused entitlements on full refunds and lost disputes. The function name is historical; it serves both modes.
-- `/admin` — admin portal. Gate is in `lib/admin.ts:getAdminAccess()`: requires `app_metadata.role === "admin"` AND `aal === "aal2"` (TOTP MFA). All data comes from the content-free `admin_dashboard_snapshot()` Postgres function; it never exposes letter text, media, or emails.
+- `/admin` — admin portal. Gate is in `lib/admin.ts:getAdminAccess()`: requires `app_metadata.role === "admin"` AND `aal === "aal2"` (TOTP MFA). All data comes from the content-free `admin_dashboard_snapshot()` Postgres function; it never exposes letter text or media. The paginated `admin_browse_records()` People list is the one place account emails are shown (approved by Felix 2026-10-30).
 - `/api/media/[id]` — authenticated, no-store proxy that streams private Storage objects (with HTTP Range support); media is never exposed via public object URLs.
 - `/api/notifications` — polled events (received jars, newly unlocked envelopes) for the in-browser `NotificationCenter`; previews must never reveal letter content.
 
