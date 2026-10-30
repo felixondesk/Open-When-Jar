@@ -157,7 +157,7 @@ export function MediaAttachments({ disabled = false, onChange }: MediaAttachment
         <div className="media-attachment-card">
           <span aria-hidden="true">▧</span>
           <strong>Photo</strong>
-          <small>{photo ? `${formatBytes(photo.size)} WebP` : "JPEG, PNG, or WebP"}</small>
+          <small>{photo ? `${formatBytes(photo.size)} ${photo.type === "image/jpeg" ? "JPEG" : "WebP"}` :"JPEG, PNG, or WebP"}</small>
           <input ref={imageInputRef} hidden accept="image/jpeg,image/png,image/webp" type="file" onChange={selectPhoto} />
           <button disabled={controlsDisabled} type="button" onClick={() => imageInputRef.current?.click()}>{preparing ? "Compressing…" : photo ? "Replace photo" : "Choose photo"}</button>
           {photo ? <button className="media-remove" type="button" onClick={() => setPhoto(null)}>Remove</button> : null}
@@ -197,10 +197,12 @@ async function compressImage(source: File) {
     context.fillRect(0, 0, width, height);
     context.drawImage(bitmap, 0, 0, width, height);
 
+    // iOS WebKit (every iPhone browser) can't encode WebP and silently returns PNG, so fall back to JPEG there.
+    const type = (await canvasToBlob(canvas, "image/webp", 0.8)).type === "image/webp" ? "image/webp" : "image/jpeg";
     for (const quality of [0.8, 0.7, 0.6]) {
-      const blob = await canvasToBlob(canvas, quality);
-      if (blob.size <= MAX_PREPARED_BYTES) {
-        return new File([blob], "photo.webp", { type: "image/webp", lastModified: Date.now() });
+      const blob = await canvasToBlob(canvas, type, quality);
+      if (blob.type === type && blob.size <= MAX_PREPARED_BYTES) {
+        return new File([blob], type === "image/webp" ? "photo.webp" : "photo.jpg", { type, lastModified: Date.now() });
       }
     }
     throw new Error("Compressed image remains too large");
@@ -209,9 +211,9 @@ async function compressImage(source: File) {
   }
 }
 
-function canvasToBlob(canvas: HTMLCanvasElement, quality: number) {
+function canvasToBlob(canvas: HTMLCanvasElement, type: string, quality: number) {
   return new Promise<Blob>((resolve, reject) => {
-    canvas.toBlob((blob) => blob ? resolve(blob) : reject(new Error("WebP encoding failed")), "image/webp", quality);
+    canvas.toBlob((blob) => blob ? resolve(blob) : reject(new Error("Image encoding failed")), type, quality);
   });
 }
 

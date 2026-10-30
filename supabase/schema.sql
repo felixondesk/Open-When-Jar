@@ -112,7 +112,7 @@ create table public.attachments (
   constraint attachments_byte_size check (byte_size between 1 and 1500000),
   constraint attachments_storage_path check (char_length(storage_path) between 20 and 300 and storage_path !~ '(^|/)\.\.?(/|$)'),
   constraint attachments_mime_kind check (
-    (kind = 'image' and mime_type = 'image/webp')
+    (kind = 'image' and mime_type in ('image/webp', 'image/jpeg'))
     or (kind = 'audio' and mime_type in ('audio/webm', 'audio/ogg', 'audio/mp4'))
   ),
   unique (envelope_id, kind)
@@ -600,7 +600,7 @@ values (
   'jar-media',
   false,
   2000000,
-  array['image/webp', 'audio/webm', 'audio/ogg', 'audio/mp4']
+  array['image/webp', 'image/jpeg', 'audio/webm', 'audio/ogg', 'audio/mp4']
 )
 on conflict (id) do update set
   public = excluded.public,

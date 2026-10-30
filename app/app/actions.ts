@@ -13,10 +13,10 @@ export type InviteFormState = { error?: string };
 const MAX_MEDIA_BYTES = 1_500_000;
 
 type ValidatedMedia = {
-  extension: "webp" | "webm" | "ogg" | "m4a";
+  extension: "webp" | "jpg" | "webm" | "ogg" | "m4a";
   file: File;
   kind: "image" | "audio";
-  mimeType: "image/webp" | "audio/webm" | "audio/ogg" | "audio/mp4";
+  mimeType: "image/webp" | "image/jpeg" | "audio/webm" | "audio/ogg" | "audio/mp4";
 };
 
 export async function createJarAction(
@@ -326,10 +326,14 @@ async function validateMedia(file: File, expectedKind: "image" | "audio"): Promi
 
   if (expectedKind === "image") {
     const isWebP = ascii(bytes, 0, 4) === "RIFF" && ascii(bytes, 8, 4) === "WEBP";
-    if (!isWebP) throw new Error("Photo validation failed. Choose the image again.");
-    const dimensions = readWebPDimensions(bytes);
+    // iPhone browsers can't encode WebP, so the client sends JPEG there.
+    const isJpeg = bytes[0] === 0xff && bytes[1] === 0xd8 && bytes[2] === 0xff;
+    if (!isWebP && !isJpeg) throw new Error("Photo validation failed. Choose the image again.");
+    const dimensions = isWebP ? readWebPDimensions(bytes) : readJpegDimensions(new Uint8Array(await file.slice(0, 65_536).arrayBuffer()));
     if (!dimensions || dimensions.width > 1600 || dimensions.height > 1600) throw new Error("Photo dimensions are not safe. Choose the image again.");
-    return { extension: "webp", file, kind: "image", mimeType: "image/webp" };
+    return isWebP
+      ? { extension: "webp", file, kind: "image", mimeType: "image/webp" }
+      : { extension: "jpg", file, kind: "image", mimeType: "image/jpeg" };
   }
 
   if (bytes[0] === 0x1a && bytes[1] === 0x45 && bytes[2] === 0xdf && bytes[3] === 0xa3) {
@@ -351,6 +355,21 @@ function readWebPDimensions(bytes: Uint8Array) {
   }
   if (chunk === "VP8 " && bytes.length >= 30 && bytes[23] === 0x9d && bytes[24] === 0x01 && bytes[25] === 0x2a) {
     return { width: (bytes[26] | (bytes[27] << 8)) & 0x3fff, height: (bytes[28] | (bytes[29] << 8)) & 0x3fff };
+  }
+  return null;
+}
+
+function readJpegDimensions(bytes: Uint8Array) {
+  let offset = 2;
+  while (offset + 9 <= bytes.length && bytes[offset] === 0xff) {
+    const marker = bytes[offset + 1];
+    const length = (bytes[offset + 2] << 8) | bytes[offset + 3];
+    // SOF0–SOF15, excluding DHT (C4), JPG (C8) and DAC (CC).
+    if (marker >= 0xc0 && marker <= 0xcf && marker !== 0xc4 && marker !== 0xc8 && marker !== 0xcc) {
+      return { height: (bytes[offset + 5] << 8) | bytes[offset + 6], width: (bytes[offset + 7] << 8) | bytes[offset + 8] };
+    }
+    if (length < 2) return null;
+    offset += 2 + length;
   }
   return null;
 }
